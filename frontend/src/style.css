@@ -280,6 +280,8 @@
 
   .stat-value {
     @apply text-2xl font-bold text-ink-strong truncate;
+    font-family: 'Fraunces', Georgia, 'Times New Roman', 'PingFang SC', serif;
+    letter-spacing: -0.02em;
   }
 
   .stat-label {

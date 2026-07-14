@@ -12,7 +12,7 @@
         </button>
 
         <div class="hidden lg:block">
-          <h1 class="text-lg font-semibold text-ink-strong">
+          <h1 class="text-lg font-semibold font-display tracking-tight text-ink-strong">
             {{ pageTitle }}
           </h1>
           <p v-if="pageDescription" class="text-xs text-ink-muted">

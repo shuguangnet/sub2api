@@ -36,6 +36,8 @@
     <!-- 液态背景 -->
     <div class="orb orb-1" aria-hidden="true"></div>
     <div class="orb orb-2" aria-hidden="true"></div>
+    <!-- 电影颗粒噪点 -->
+    <div class="grain" aria-hidden="true"></div>
 
     <!-- 导航 -->
     <header class="nav-bar">
@@ -62,8 +64,9 @@
 
     <main class="relative z-10">
       <!-- ============ Hero ============ -->
-      <section class="hero">
+      <section class="hero" @pointermove="onHeroMove">
         <div class="hero-orb" aria-hidden="true"></div>
+        <div class="hero-light" aria-hidden="true"></div>
         <div class="hero-copy">
           <p class="hero-eyebrow reveal reveal-1">{{ t('home.providers.description') }}</p>
           <h1 class="hero-title font-display reveal reveal-2">
@@ -105,6 +108,13 @@
           <div class="ms"><strong class="font-display">{{ animatedLatency }}ms</strong><span>{{ t('home.cases.title') === '客户案例' ? '平均延迟' : 'avg latency' }}</span></div>
         </div>
       </section>
+
+      <!-- ============ 艺术分隔条 ============ -->
+      <div class="breaker" aria-hidden="true">
+        <div class="breaker-track font-display">
+          <span>{{ t('home.heroSubtitle') }}</span><i>✦</i><span>{{ t('home.providers.description') }}</span><i>✦</i><span>{{ t('home.heroSubtitle') }}</span><i>✦</i><span>{{ t('home.providers.description') }}</span><i>✦</i>
+        </div>
+      </div>
 
       <!-- ============ 痛点（编辑式编号列表，无边框） ============ -->
       <section class="editorial">
@@ -183,6 +193,13 @@
           </div>
         </div>
       </section>
+
+      <!-- ============ 艺术分隔条 ============ -->
+      <div class="breaker breaker-alt" aria-hidden="true">
+        <div class="breaker-track font-display">
+          <span>{{ t('home.cap.title') }}</span><i>✦</i><span>{{ t('home.solutions.subtitle') }}</span><i>✦</i><span>{{ t('home.cap.title') }}</span><i>✦</i><span>{{ t('home.solutions.subtitle') }}</span><i>✦</i>
+        </div>
+      </div>
 
       <!-- ============ 对比（编辑式双栏散文，无边框） ============ -->
       <section id="pricing" class="editorial">
@@ -311,6 +328,14 @@ function toggleTheme() {
   isDark.value = !isDark.value
   document.documentElement.classList.toggle('dark', isDark.value)
   localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
+}
+
+// ===== Hero 鼠标光晕 =====
+function onHeroMove(e: PointerEvent): void {
+  const el = e.currentTarget as HTMLElement
+  const rect = el.getBoundingClientRect()
+  el.style.setProperty('--mx', ((e.clientX - rect.left) / rect.width) * 100 + '%')
+  el.style.setProperty('--my', ((e.clientY - rect.top) / rect.height) * 100 + '%')
 }
 
 // ===== 痛点 / 解决方案 / 对比（来自 i18n） =====
@@ -521,6 +546,10 @@ onUnmounted(() => {
 <style scoped>
 .home-shell { color: var(--ink); background: var(--surface-bg); }
 
+/* 电影颗粒噪点 */
+.grain { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: .04; mix-blend-mode: overlay; background-image: var(--noise); background-size: 180px 180px; }
+.dark .grain { opacity: .06; mix-blend-mode: soft-light; }
+
 /* 液态背景球 */
 .orb { position: fixed; border-radius: 50%; filter: blur(90px); pointer-events: none; z-index: 0; opacity: .55; }
 .orb-1 { width: 520px; height: 520px; top: -160px; right: -120px; background: radial-gradient(circle, rgba(139,92,246,.42), transparent 68%); animation: orb-drift 20s ease-in-out infinite; }
@@ -548,6 +577,7 @@ onUnmounted(() => {
 /* Hero */
 .hero { position: relative; max-width: 76rem; margin: 0 auto; padding: 80px 32px 56px; min-height: 78vh; display: flex; flex-direction: column; justify-content: center; }
 .hero-orb { position: absolute; width: 620px; height: 620px; max-width: 90vw; right: -120px; top: 30%; border-radius: 50%; background-image: var(--gradient-brand); filter: blur(60px); opacity: .5; animation: orb-pulse 12s ease-in-out infinite; z-index: -1; }
+.hero-light { position: absolute; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 30%), color-mix(in srgb, var(--color-primary) 16%, transparent), transparent 60%); transition: background 200ms var(--ease-out); }
 @keyframes orb-pulse { 0%,100% { transform: scale(1) rotate(0deg); opacity: .45; } 50% { transform: scale(1.15) rotate(20deg); opacity: .6; } }
 .hero-copy { max-width: 880px; }
 .hero-eyebrow { font-size: 13px; font-weight: 500; color: var(--color-primary-strong); letter-spacing: .02em; margin-bottom: 24px; }
@@ -578,9 +608,18 @@ onUnmounted(() => {
 .ms strong { font-size: 44px; font-weight: 700; letter-spacing: -0.03em; color: var(--color-primary); }
 .ms span { margin-top: 6px; font-size: 13px; color: var(--ink-muted); }
 
+/* 艺术分隔条 */
+.breaker { overflow: hidden; padding: 28px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); -webkit-mask-image: linear-gradient(90deg, transparent, black 5%, black 95%, transparent); mask-image: linear-gradient(90deg, transparent, black 5%, black 95%, transparent); }
+.breaker-track { display: flex; align-items: center; gap: 36px; width: max-content; white-space: nowrap; animation: marquee 40s linear infinite; }
+.breaker-track span { font-size: clamp(34px, 5vw, 64px); font-style: italic; font-weight: 400; letter-spacing: -0.02em; color: var(--ink-subtle); line-height: 1; }
+.breaker-track i { font-size: 18px; color: var(--color-primary); font-style: normal; opacity: .7; }
+.breaker-alt .breaker-track span { color: color-mix(in srgb, var(--color-primary) 60%, var(--ink-subtle)); }
+.breaker:hover .breaker-track { animation-play-state: paused; }
+
 /* Editorial 通用 */
 .editorial { max-width: 76rem; margin: 0 auto; padding: 80px 32px; }
-.section-kicker { font-size: 14px; font-weight: 600; color: var(--color-accent); letter-spacing: .04em; margin-bottom: 18px; }
+.section-kicker { display: inline-flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; color: var(--color-accent); letter-spacing: .04em; margin-bottom: 18px; }
+.section-kicker::before { content: '✦'; font-size: 12px; color: var(--color-primary); font-style: normal; }
 .section-title { font-size: clamp(36px, 5.5vw, 76px); line-height: 1; font-weight: 700; letter-spacing: -0.03em; color: var(--ink-strong); }
 .section-sub { margin-top: 18px; font-size: 16px; color: var(--ink-muted); max-width: 560px; }
 
@@ -774,6 +813,10 @@ onUnmounted(() => {
 
   /* Manifesto */
   .manifesto, .editorial { padding: 56px 18px; }
+  .breaker { padding: 18px 0; }
+  .breaker-track { gap: 24px; animation-duration: 30s; }
+  .breaker-track span { font-size: clamp(24px, 7vw, 38px); }
+  .breaker-track i { font-size: 14px; }
   .waveform { height: 38px; margin-bottom: 36px; gap: 3px; }
   .wave-bar:nth-child(even) { display: none; }
   .manifesto-text { font-size: clamp(22px, 6.2vw, 30px); line-height: 1.3; }
