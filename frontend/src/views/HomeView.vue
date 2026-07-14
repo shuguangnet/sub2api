@@ -740,49 +740,138 @@ onUnmounted(() => {
   .cap-item:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
 }
 @media (max-width: 640px) {
-  .nav-bar { padding: 16px 16px; }
+  /* 导航：极简紧凑 */
+  .nav-bar { padding: 14px 16px; gap: 8px; }
+  .brand { gap: 10px; }
+  .brand-mark { width: 32px; height: 32px; border-radius: 10px; }
   .brand-name { display: none; }
   .nav-link { display: none; }
-  .hero { padding: 40px 16px 32px; min-height: auto; }
-  .hero-orb { right: -50vw; width: 420px; height: 420px; }
-  .hero-title { font-size: clamp(48px, 14vw, 80px); }
-  .hero-sub { font-size: clamp(18px, 5vw, 24px); }
-  .hero-actions { gap: 14px; margin-top: 30px; }
-  .primary-action { width: 100%; height: 48px; }
-  .text-action { font-size: 13px; }
-  .live-row { flex-direction: column; align-items: flex-start; gap: 8px; margin-top: 36px; font-size: 12px; }
+  .nav-right { gap: 6px; }
+  .icon-action { width: 34px; height: 34px; }
+  .nav-cta { height: 34px; padding: 0 14px; font-size: 12px; gap: 6px; }
+  .nav-cta :deep(svg) { display: none; }
+
+  /* 固定光斑：缩小降透明，避免 muddy */
+  .orb { opacity: .28; filter: blur(70px); }
+  .orb-1 { width: 320px; height: 320px; top: -100px; right: -80px; }
+  .orb-2 { width: 280px; height: 280px; bottom: -80px; left: -90px; }
+
+  /* Hero：干净无 muddy 光球，文字优先 */
+  .hero { padding: 32px 18px 28px; min-height: auto; }
+  .hero-orb { display: none; }
+  .hero-copy { max-width: 100%; }
+  .hero-eyebrow { font-size: 12px; margin-bottom: 18px; padding: 5px 11px; }
+  .hero-title { font-size: clamp(44px, 13vw, 72px); line-height: .92; }
+  .hero-sub { font-size: clamp(17px, 4.6vw, 22px); margin-top: 18px; line-height: 1.25; }
+  .hero-actions { gap: 12px; margin-top: 26px; flex-direction: column; align-items: stretch; }
+  .primary-action { width: 100%; height: 50px; border-radius: 12px; justify-content: center; }
+  .text-action { align-self: center; font-size: 13px; }
+
+  /* 实时指标：收成一颗胶囊卡片 */
+  .live-row { margin-top: 28px; padding: 12px 14px; border-radius: 14px; background: color-mix(in srgb, var(--surface-1) 80%, transparent); border: 1px solid var(--line); backdrop-filter: blur(8px); flex-direction: row; flex-wrap: wrap; align-items: center; gap: 10px 14px; font-size: 12px; }
   .live-sep { display: none; }
-  .manifesto, .editorial, .cta-section { padding-left: 16px; padding-right: 16px; }
-  .manifesto { padding-top: 64px; padding-bottom: 64px; }
-  .editorial { padding-top: 56px; padding-bottom: 56px; }
-  .waveform { height: 44px; margin-bottom: 40px; }
-  .manifesto-stats { gap: 28px; }
-  .ms strong { font-size: 32px; }
-  .section-title { font-size: clamp(30px, 9vw, 44px); }
-  .pain-item { grid-template-columns: 48px 1fr; gap: 14px; padding: 24px 0; }
-  .pain-num { font-size: 22px; }
-  .pain-body h3 { font-size: 19px; }
-  .pain-body p { font-size: 14px; }
-  .cap-rail { grid-template-columns: 1fr; }
-  .cap-item { border-right: 0; border-bottom: 1px solid var(--line); padding: 28px 0; }
-  .cap-item:last-child { border-bottom: 0; }
-  .how-step { grid-template-columns: 48px 1fr; gap: 14px; padding: 22px 0; }
-  .how-num { font-size: 22px; }
-  .code-snippet { font-size: 11px; padding: 18px; line-height: 1.7; }
-  .compare-line { font-size: 16px; }
-  .quote-text { font-size: clamp(20px, 6vw, 28px); }
-  .cta-section { padding: 80px 16px; }
-  .cta-title { font-size: clamp(34px, 11vw, 52px); }
-  .home-footer { flex-direction: column; gap: 14px; text-align: center; padding: 32px 16px; }
+  .live-model { font-size: 11px; padding: 3px 9px; }
+
+  /* Manifesto */
+  .manifesto, .editorial { padding: 56px 18px; }
+  .waveform { height: 38px; margin-bottom: 36px; gap: 3px; }
+  .wave-bar:nth-child(even) { display: none; }
+  .manifesto-text { font-size: clamp(22px, 6.2vw, 30px); line-height: 1.3; }
+  .manifesto-stats { gap: 24px; margin-top: 40px; }
+  .ms strong { font-size: 28px; }
+  .ms span { font-size: 11px; }
+
+  .section-title { font-size: clamp(28px, 8.5vw, 40px); }
+  .section-sub { font-size: 14px; margin-top: 14px; }
+  .section-kicker { font-size: 12px; margin-bottom: 14px; }
+
+  /* 痛点 */
+  .pain-list { margin-top: 36px; }
+  .pain-item { grid-template-columns: 44px 1fr; gap: 14px; padding: 22px 0; }
+  .pain-num { font-size: 20px; }
+  .pain-body h3 { font-size: 18px; }
+  .pain-body p { font-size: 13.5px; line-height: 1.65; }
+
+  /* 解决方案 */
+  .flow { margin-top: 36px; }
+  .flow-item { padding: 28px 0; }
+  .flow-item h3 { font-size: 20px; }
+  .flow-item p { font-size: 13.5px; }
+  .flow-icon { width: 40px; height: 40px; margin-bottom: 18px; }
+
+  /* 工作原理 */
+  .how-grid { margin-top: 36px; gap: 28px; }
+  .how-step { grid-template-columns: 44px 1fr; gap: 14px; padding: 20px 0; }
+  .how-num { font-size: 20px; }
+  .how-step h3 { font-size: 18px; }
+  .how-step p { font-size: 13.5px; line-height: 1.65; }
+  .how-code { border-radius: 16px; }
+  .code-snippet { font-size: 11px; padding: 16px; line-height: 1.7; }
+  .code-foot { padding: 12px 16px; font-size: 11px; }
+
+  /* 平台能力 */
+  .cap-rail { margin-top: 36px; }
+  .cap-item { padding: 26px 0; }
+  .cap-item h3 { font-size: 18px; }
+  .cap-item p { font-size: 13.5px; }
+  .cap-icon { width: 40px; height: 40px; margin-bottom: 16px; }
+
+  /* 对比 */
+  .compare { margin-top: 36px; gap: 20px; }
+  .compare-head { font-size: 12px; padding-bottom: 12px; }
+  .compare-line { font-size: 15.5px; line-height: 1.45; }
+  .compare-vs { font-size: 28px; align-self: flex-start; }
+
+  /* 模型跑马灯 */
+  .model-marquee { margin-top: 36px; }
+  .model-word { font-size: clamp(34px, 10vw, 56px); }
+  .model-chips { gap: 8px; margin-top: 24px; }
+  .mchip { padding: 7px 14px; font-size: 12px; }
+
+  /* 客户案例 */
+  .trust-marquee { margin-top: 32px; padding: 14px 0; }
+  .marquee-item { font-size: 18px; }
+  .featured-quote { margin-top: 40px; }
+  .quote-mark { font-size: 80px; }
+  .quote-text { font-size: clamp(19px, 5.5vw, 24px); line-height: 1.4; }
+  .quote-foot { gap: 10px; margin-top: 24px; }
+  .quote-name { font-size: 16px; }
+  .quote-role { font-size: 13px; }
+  .quote-metric { font-size: 13px; margin-left: 0; }
+
+  /* FAQ */
+  .faq-list { margin-top: 32px; }
+  .faq-q { padding: 20px 2px; }
+  .faq-q span.font-display { font-size: 16px; }
+  .faq-a p { font-size: 14px; line-height: 1.7; padding-bottom: 22px; }
+
+  /* CTA */
+  .cta-section { padding: 72px 18px; }
+  .cta-title { font-size: clamp(32px, 10vw, 48px); }
+  .cta-desc { font-size: 14px; margin-top: 18px; }
+  .cta-button { height: 50px; padding: 0 26px; font-size: 15px; margin-top: 30px; width: 100%; max-width: 320px; }
+  .cta-orb { width: 380px; height: 380px; opacity: .6; }
+
+  /* Footer */
+  .home-footer { flex-direction: column; gap: 12px; text-align: center; padding: 28px 18px; font-size: 11px; }
+  .home-footer div { gap: 18px; }
+
+  /* 开屏 */
   .intro-text { min-width: 120px; }
-  .intro-mark { width: 64px; height: 64px; }
-  .intro-brand { font-size: 24px; }
-  .intro-progress { width: 240px; }
+  .intro-mark { width: 60px; height: 60px; border-radius: 16px; }
+  .intro-brand { font-size: 22px; }
+  .intro-tagline { font-size: 11px; }
+  .intro-lines { font-size: 11px; gap: 8px; }
+  .intro-text { min-width: 130px; }
+  .intro-progress { width: 230px; margin-top: 22px; }
+  .intro-pct { font-size: 10px; }
 }
 @media (max-width: 380px) {
-  .hero-title { font-size: 44px; }
-  .hero-eyebrow { font-size: 12px; }
-  .nav-cta { padding: 0 12px; font-size: 12px; }
+  .hero-title { font-size: 40px; }
+  .hero-eyebrow { font-size: 11px; }
+  .nav-cta { padding: 0 11px; font-size: 11px; }
+  .brand-mark { width: 30px; height: 30px; }
+  .icon-action { width: 32px; height: 32px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .reveal, .orb, .hero-orb, .cta-orb, .intro-aurora, .marquee-track, .live-dot, .wave-bar { animation: none !important; }
