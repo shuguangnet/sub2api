@@ -1,26 +1,26 @@
 /**
- * Design Tokens — "Aurora Tech" 冷色科技设计系统
+ * Design Tokens - "Aurora Tech" 冷色科技设计系统
  * 统一所有颜色 / 圆角 / 阴影 / 间距 / 动效令牌，深浅色双轨。
  * 所有组件应通过 var(--token) 或 Tailwind 语义类引用，禁止字面量颜色散落。
  */
 
 :root {
-  /* ============ 品牌主色 — Lavender / 淡紫 ============ */
-  --color-primary-50: #f5f3ff;
-  --color-primary-100: #ede9fe;
-  --color-primary-200: #ddd6fe;
-  --color-primary-300: #c4b5fd;
-  --color-primary-400: #a78bfa;
-  --color-primary-500: #8b5cf6;
-  --color-primary-600: #7c3aed;
-  --color-primary-700: #6d28d9;
-  --color-primary-800: #5b21b6;
-  --color-primary-900: #4c1d95;
-  --color-primary-950: #2e1065;
+  /* ============ 品牌主色 - Sky / 淡蓝 ============ */
+  --color-primary-50: #f0f9ff;
+  --color-primary-100: #e0f2fe;
+  --color-primary-200: #bae6fd;
+  --color-primary-300: #7dd3fc;
+  --color-primary-400: #38bdf8;
+  --color-primary-500: #0ea5e9;
+  --color-primary-600: #0284c7;
+  --color-primary-700: #0369a1;
+  --color-primary-800: #075985;
+  --color-primary-900: #0c4a6e;
+  --color-primary-950: #082f49;
   --color-primary: var(--color-primary-500);
   --color-primary-strong: var(--color-primary-600);
 
-  /* ============ 辅色 — Warm Gold ============ */
+  /* ============ 辅色 - Warm Gold ============ */
   --color-accent-50: #fdf8ed;
   --color-accent-100: #f9edcb;
   --color-accent-200: #f2d98c;
@@ -31,23 +31,23 @@
   --color-accent-700: #8e6410;
   --color-accent: var(--color-accent-500);
 
-  /* ============ 中性表面 — 微紫调暖白（浅色） ============ */
-  --surface-bg: #faf9fb;
-  --surface-1: #fffdfb;
-  --surface-2: #f4f1f8;
-  --surface-3: #ece8f2;
-  --surface-elevated: #fffdfb;
+  /* ============ 中性表面 - 微蓝调净白（浅色） ============ */
+  --surface-bg: #f8fafc;
+  --surface-1: #ffffff;
+  --surface-2: #f1f5f9;
+  --surface-3: #e2e8f0;
+  --surface-elevated: #ffffff;
 
   /* 文字 */
-  --ink: #211d2b;
-  --ink-strong: #15111f;
-  --ink-muted: #6b6478;
-  --ink-subtle: #9a93a3;
+  --ink: #1e293b;
+  --ink-strong: #0f172a;
+  --ink-muted: #64748b;
+  --ink-subtle: #94a3b8;
 
   /* 描边 */
-  --line: rgba(10, 11, 15, 0.08);
-  --line-strong: rgba(10, 11, 15, 0.14);
-  --line-subtle: rgba(10, 11, 15, 0.05);
+  --line: rgba(15, 23, 42, 0.08);
+  --line-strong: rgba(15, 23, 42, 0.14);
+  --line-subtle: rgba(15, 23, 42, 0.05);
 
   /* 语义色 */
   --color-success: #10b981;
@@ -70,12 +70,12 @@
   --radius-pill: 9999px;
 
   /* ============ 阴影 ============ */
-  --shadow-xs: 0 1px 2px rgba(10, 11, 15, 0.04);
-  --shadow-sm: 0 1px 2px rgba(10, 11, 15, 0.04), 0 1px 3px rgba(10, 11, 15, 0.06);
-  --shadow-card: 0 1px 2px rgba(10, 11, 15, 0.04), 0 4px 16px rgba(10, 11, 15, 0.06);
-  --shadow-card-hover: 0 2px 4px rgba(10, 11, 15, 0.05), 0 12px 32px rgba(10, 11, 15, 0.1);
-  --shadow-popover: 0 4px 8px rgba(10, 11, 15, 0.06), 0 24px 48px rgba(10, 11, 15, 0.16);
-  --shadow-glow: 0 0 0 1px rgba(139, 92, 246, 0.24), 0 8px 24px rgba(139, 92, 246, 0.22);
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06);
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 16px rgba(15, 23, 42, 0.06);
+  --shadow-card-hover: 0 2px 4px rgba(15, 23, 42, 0.05), 0 12px 32px rgba(15, 23, 42, 0.1);
+  --shadow-popover: 0 4px 8px rgba(15, 23, 42, 0.06), 0 24px 48px rgba(15, 23, 42, 0.16);
+  --shadow-glow: 0 0 0 1px rgba(14, 165, 233, 0.24), 0 8px 24px rgba(14, 165, 233, 0.22);
   --shadow-glow-accent: 0 0 0 1px rgba(212, 160, 23, 0.24), 0 8px 24px rgba(212, 160, 23, 0.18);
   --shadow-inner: inset 0 1px 0 rgba(255, 255, 255, 0.6);
 
@@ -93,10 +93,10 @@
   --dur-4: 500ms;
 
   /* ============ 渐变 / 背景 ============ */
-  --gradient-primary: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
-  --gradient-brand: linear-gradient(135deg, #c4b5fd 0%, #8b5cf6 50%, #7c3aed 100%);
-  --gradient-aurora: radial-gradient(60% 80% at 20% 10%, rgba(139, 92, 246, 0.18), transparent 60%), radial-gradient(50% 70% at 85% 30%, rgba(212, 160, 23, 0.16), transparent 60%), radial-gradient(60% 80% at 50% 100%, rgba(124, 58, 237, 0.12), transparent 60%);
-  --gradient-mesh: linear-gradient(rgba(139, 92, 246, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(139, 92, 246, 0.05) 1px, transparent 1px);
+  --gradient-primary: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+  --gradient-brand: linear-gradient(135deg, #7dd3fc 0%, #0ea5e9 50%, #0284c7 100%);
+  --gradient-aurora: radial-gradient(60% 80% at 20% 10%, rgba(14, 165, 233, 0.18), transparent 60%), radial-gradient(50% 70% at 85% 30%, rgba(212, 160, 23, 0.16), transparent 60%), radial-gradient(60% 80% at 50% 100%, rgba(2, 132, 199, 0.12), transparent 60%);
+  --gradient-mesh: linear-gradient(rgba(14, 165, 233, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(14, 165, 233, 0.05) 1px, transparent 1px);
   --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
 
   /* 透明层叠加色（用于玻璃面板半透背景） */
@@ -105,17 +105,17 @@
 }
 
 .dark {
-  /* ============ 深色表面 — 紫调暗墨 ============ */
-  --surface-bg: #16121f;
-  --surface-1: #1f1a2b;
-  --surface-2: #2a2440;
-  --surface-3: #363052;
-  --surface-elevated: #221d33;
+  /* ============ 深色表面 - 蓝调暗墨 ============ */
+  --surface-bg: #0f172a;
+  --surface-1: #1e293b;
+  --surface-2: #334155;
+  --surface-3: #475569;
+  --surface-elevated: #1e293b;
 
-  --ink: #f3eef8;
-  --ink-strong: #fffaff;
-  --ink-muted: #b3aac4;
-  --ink-subtle: #8a8099;
+  --ink: #e2e8f0;
+  --ink-strong: #f8fafc;
+  --ink-muted: #94a3b8;
+  --ink-subtle: #64748b;
 
   --line: rgba(255, 255, 255, 0.09);
   --line-strong: rgba(255, 255, 255, 0.18);
@@ -127,8 +127,8 @@
   --color-info-soft: rgba(59, 130, 246, 0.16);
 
   /* 深色模式下主色略提亮以保持对比度 */
-  --color-primary: #a78bfa;
-  --color-primary-strong: #8b5cf6;
+  --color-primary: #38bdf8;
+  --color-primary-strong: #0ea5e9;
   --color-accent: #ebc257;
 
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
@@ -136,13 +136,13 @@
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.4);
   --shadow-card-hover: 0 2px 4px rgba(0, 0, 0, 0.4), 0 16px 40px rgba(0, 0, 0, 0.5);
   --shadow-popover: 0 4px 8px rgba(0, 0, 0, 0.4), 0 32px 64px rgba(0, 0, 0, 0.6);
-  --shadow-glow: 0 0 0 1px rgba(167, 139, 250, 0.3), 0 12px 32px rgba(139, 92, 246, 0.34);
+  --shadow-glow: 0 0 0 1px rgba(56, 189, 248, 0.3), 0 12px 32px rgba(14, 165, 233, 0.34);
   --shadow-glow-accent: 0 0 0 1px rgba(235, 194, 87, 0.3), 0 12px 32px rgba(212, 160, 23, 0.26);
   --shadow-inner: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 
-  --gradient-aurora: radial-gradient(60% 80% at 20% 10%, rgba(139, 92, 246, 0.28), transparent 60%), radial-gradient(50% 70% at 85% 30%, rgba(212, 160, 23, 0.2), transparent 60%), radial-gradient(60% 80% at 50% 100%, rgba(124, 58, 237, 0.2), transparent 60%);
-  --gradient-mesh: linear-gradient(rgba(167, 139, 250, 0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(167, 139, 250, 0.06) 1px, transparent 1px);
+  --gradient-aurora: radial-gradient(60% 80% at 20% 10%, rgba(14, 165, 233, 0.28), transparent 60%), radial-gradient(50% 70% at 85% 30%, rgba(212, 160, 23, 0.2), transparent 60%), radial-gradient(60% 80% at 50% 100%, rgba(2, 132, 199, 0.2), transparent 60%);
+  --gradient-mesh: linear-gradient(rgba(56, 189, 248, 0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(56, 189, 248, 0.06) 1px, transparent 1px);
 
-  --glass-bg: rgba(31, 26, 43, 0.7);
+  --glass-bg: rgba(30, 41, 59, 0.7);
   --glass-border: rgba(255, 255, 255, 0.09);
 }
