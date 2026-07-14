@@ -40,6 +40,15 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/design-tokens',
+    name: 'DesignTokens',
+    component: () => import('@/views/DesignTokensView.vue'),
+    meta: {
+      requiresAuth: false,
+      title: 'Design Tokens'
+    }
+  },
+  {
     path: '/login',
     name: 'Login',
     component: () => import('@/views/auth/LoginView.vue'),

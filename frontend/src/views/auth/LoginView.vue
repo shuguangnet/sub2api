@@ -2,13 +2,10 @@
   <AuthLayout>
     <div class="space-y-6">
       <!-- Title -->
-      <div class="text-center">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
-          {{ t('auth.welcomeBack') }}
-        </h2>
-        <p class="mt-2 text-sm text-gray-500 dark:text-dark-400">
-          {{ t('auth.signInToAccount') }}
-        </p>
+      <div class="auth-head text-center mb-8">
+        <p class="auth-kicker font-display">— {{ t('home.providers.description') }} —</p>
+        <h2 class="auth-title font-display">{{ t('auth.welcomeBack') }}</h2>
+        <p class="auth-sub"><em>{{ t('auth.signInToAccount') }}</em></p>
       </div>
       <!-- Login Form -->
       <form @submit.prevent="handleLogin" class="space-y-5">
@@ -19,7 +16,7 @@
           </label>
           <div class="relative">
             <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-              <Icon name="mail" size="md" class="text-gray-400 dark:text-dark-500" />
+              <Icon name="mail" size="md" class="text-ink-subtle" />
             </div>
             <input
               id="email"
@@ -43,7 +40,7 @@
           </label>
           <div class="relative">
             <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
-              <Icon name="lock" size="md" class="text-gray-400 dark:text-dark-500" />
+              <Icon name="lock" size="md" class="text-ink-subtle" />
             </div>
             <input
               id="password"
@@ -60,7 +57,7 @@
               type="button"
               @click="showPassword = !showPassword"
               :disabled="authActionDisabled"
-              class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-dark-300"
+              class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-ink-subtle transition-colors hover:text-ink"
             >
               <Icon v-if="showPassword" name="eyeOff" size="md" />
               <Icon v-else name="eye" size="md" />
@@ -133,11 +130,11 @@
 
         <div v-if="showOAuthLogin" class="space-y-3 pt-1">
           <div class="flex items-center gap-3">
-            <div class="h-px flex-1 bg-gray-200 dark:bg-dark-700"></div>
-            <span class="text-xs text-gray-500 dark:text-dark-400">
+            <div class="h-px flex-1 bg-line"></div>
+            <span class="text-xs text-ink-muted">
               {{ t('auth.oauthOrContinue') }}
             </span>
-            <div class="h-px flex-1 bg-gray-200 dark:bg-dark-700"></div>
+            <div class="h-px flex-1 bg-line"></div>
           </div>
 
           <EmailOAuthButtons
@@ -174,7 +171,7 @@
 
     <!-- Footer -->
     <template v-if="!backendModeEnabled" #footer>
-      <p class="text-gray-500 dark:text-dark-400">
+      <p class="text-ink-muted">
         {{ t('auth.dontHaveAccount') }}
         <router-link
           to="/register"
@@ -553,14 +550,19 @@ function handle2FACancel(): void {
 </script>
 
 <style scoped>
-.fade-enter-active,
-.fade-leave-active {
-  transition: all 0.3s ease;
-}
+ .fade-enter-active,
+ .fade-leave-active {
+   transition: all 0.3s ease;
+ }
 
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-  transform: translateY(-8px);
-}
+ .fade-enter-from,
+ .fade-leave-to {
+   opacity: 0;
+   transform: translateY(-8px);
+ }
+
+ .auth-title { font-size: 28px; font-weight: 700; letter-spacing: -0.03em; color: var(--ink-strong); }
+ .auth-sub { margin-top: 8px; font-size: 14px; }
+ .auth-sub em { font-style: italic; background-image: var(--gradient-brand); -webkit-background-clip: text; background-clip: text; color: transparent; }
+ .auth-kicker { font-size: 12px; font-style: italic; color: var(--color-primary); letter-spacing: .04em; margin-bottom: 14px; }
 </style>

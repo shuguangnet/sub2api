@@ -103,6 +103,63 @@ export default {
       antigravity: 'Antigravity',
       more: '更多'
     },
+    // 工作原理
+    how: {
+      title: '如何运作',
+      subtitle: '三行代码，接入全部模型',
+      steps: [
+        { title: '注册获取密钥', desc: '创建账户，即可拿到一个统一的 API Key，无需分别申请各家。' },
+        { title: '替换接口地址', desc: '把请求指向我们的网关，其余代码一字不改，兼容 OpenAI 接口。' },
+        { title: '开始调用模型', desc: '一个密钥在 Claude、GPT、Gemini 间自由切换，按 Token 用量计费。' }
+      ]
+    },
+    // 平台能力
+    cap: {
+      title: '为生产而生',
+      subtitle: '不只是中转，是一整套可观测、可控、可扩展的网关',
+      items: [
+        { title: '智能路由', desc: '多账号池自动负载均衡与故障转移，请求永不中断。', icon: 'swap' },
+        { title: '实时计量', desc: '按 Token 精确计费，余额、配额、明细一目了然。', icon: 'chart' },
+        { title: '会话保持', desc: '长任务稳定续接，同一上下文不被打散。', icon: 'sync' },
+        { title: '安全合规', desc: 'TLS 加密、密钥隔离、日志可审计，数据绝不外泄。', icon: 'lock' }
+      ]
+    },
+    // 常见问题
+    faq: {
+      title: '常见问题',
+      items: [
+        { q: '需要管理多个订阅账号吗？', a: '不需要。只需一个本平台的 API Key，即可调用所有已接入的模型。账号池、密钥、负载均衡都由我们维护。' },
+        { q: '计费方式是怎样的？', a: '按实际 Token 用量后付费，无月费、无最低消费。余额低于阈值可设置提醒，充值后立即恢复。' },
+        { q: '接口兼容我的现有代码吗？', a: '完全兼容 OpenAI 接口规范，仅需替换 base URL 与 API Key，业务代码无需改动。' },
+        { q: '服务稳定性如何保障？', a: '多账号池自动故障转移，目标可用率 99.9%。单账号限流不影响你的请求，会自动切换到健康节点。' },
+        { q: '我的数据会被存储吗？', a: '默认不存储请求/响应正文，仅记录 token 计数与时间戳用于计费。你可随时在隐私设置中调整日志保留策略。' }
+      ]
+    },
+    // 开屏动画
+    intro: {
+      line1: '初始化网关',
+      line2: '加载模型网络',
+      line3: '建立路由节点',
+      line4: '系统就绪',
+      tagline: '安全稳定的大模型中转平台'
+    },
+    // 客户案例 / 信任
+    trust: {
+      title: '已被众多团队选择',
+      subtitle: '从初创到企业，开发者们用我们稳定地构建 AI 产品'
+    },
+    cases: {
+      title: '客户案例',
+      subtitle: '看看他们如何用 sub2api 提效',
+      items: [
+        { name: 'Nova Labs', role: 'AI 创业团队', quote: '接入后我们的模型调用再没中断过，多账号自动切换让上线节奏稳了很多。', metric: '99.98%', metricLabel: '调用可用率' },
+        { name: 'PixelForge', role: '独立游戏工作室', quote: '一个密钥就能在 Claude 和 GPT 间切换，按量计费让小团队也能毫无负担地用顶配模型。', metric: '3.2x', metricLabel: '迭代速度提升' },
+        { name: 'DataMind', role: '数据分析 SaaS', quote: '用量明细和配额控制非常透明，团队成本终于可控了，账单不再有惊喜。', metric: '47%', metricLabel: '成本下降' },
+        { name: 'CodePilot CN', role: '开发者工具', quote: '延迟比我们之前自建的中转低不少，路由调度很智能，几乎感觉不到切换。', metric: '120ms', metricLabel: '平均延迟' },
+        { name: 'WriteFlow', role: '内容生成平台', quote: '从接入到上线只花了半天，文档清晰，遇到问题响应也快。', metric: '0.5d', metricLabel: '接入耗时' },
+        { name: 'GeniusEDU', role: '教育科技公司', quote: '会话保持让我们能稳定跑长任务，多模型组合调用体验非常顺滑。', metric: '10M+', metricLabel: '月调用次数' }
+      ]
+    },
     // CTA 区块
     cta: {
       title: '准备好开始了吗？',

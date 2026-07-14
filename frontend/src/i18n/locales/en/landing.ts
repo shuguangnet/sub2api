@@ -103,6 +103,63 @@ export default {
       antigravity: 'Antigravity',
       more: 'More'
     },
+    // How it works
+    how: {
+      title: 'How It Works',
+      subtitle: 'Three lines of code to every model',
+      steps: [
+        { title: 'Get Your Key', desc: 'Sign up and receive a single unified API key — no separate applications for each provider.' },
+        { title: 'Point Your Requests', desc: 'Direct your calls to our gateway. The rest of your code stays the same. OpenAI-compatible.' },
+        { title: 'Call Any Model', desc: 'One key switches freely between Claude, GPT and Gemini. Billed by token usage.' }
+      ]
+    },
+    // Platform capabilities
+    cap: {
+      title: 'Built for Production',
+      subtitle: 'Not just a proxy — a full observable, controllable, scalable gateway',
+      items: [
+        { title: 'Smart Routing', desc: 'Multi-account pool with auto load-balancing and failover. Requests never drop.', icon: 'swap' },
+        { title: 'Real-time Metering', desc: 'Precise token-based billing. Balance, quotas and details at a glance.', icon: 'chart' },
+        { title: 'Sticky Sessions', desc: 'Long-running tasks stay coherent — context never gets split.', icon: 'sync' },
+        { title: 'Secure & Compliant', desc: 'TLS encryption, key isolation, auditable logs. Your data never leaks.', icon: 'lock' }
+      ]
+    },
+    // FAQ
+    faq: {
+      title: 'Frequently Asked Questions',
+      items: [
+        { q: 'Do I need to manage multiple subscriptions?', a: 'No. A single API key from our platform lets you call every connected model. Account pools, keys and load balancing are maintained by us.' },
+        { q: 'How does billing work?', a: 'Post-paid by actual token usage — no monthly fee, no minimum spend. Set low-balance alerts and resume instantly after top-up.' },
+        { q: 'Is it compatible with my existing code?', a: 'Fully OpenAI-compatible. Just swap the base URL and API key — no business code changes needed.' },
+        { q: 'How is stability guaranteed?', a: 'Auto-failover across a multi-account pool, targeting 99.9% uptime. Single-account rate limits never break your requests.' },
+        { q: 'Is my data stored?', a: 'Request/response bodies are not stored by default — only token counts and timestamps for billing. Adjust log retention anytime in privacy settings.' }
+      ]
+    },
+    // Intro animation
+    intro: {
+      line1: 'Initializing Gateway',
+      line2: 'Loading Model Network',
+      line3: 'Establishing Routing Nodes',
+      line4: 'System Ready',
+      tagline: 'The secure, stable AI gateway'
+    },
+    // Trust / customer cases
+    trust: {
+      title: 'Trusted by Modern Teams',
+      subtitle: 'From startups to enterprises, developers build AI products on our reliable gateway'
+    },
+    cases: {
+      title: 'Customer Stories',
+      subtitle: 'See how teams ship faster with sub2api',
+      items: [
+        { name: 'Nova Labs', role: 'AI Startup', quote: 'Since integrating, our model calls never went down. Auto-failover across accounts kept our launch rock-solid.', metric: '99.98%', metricLabel: 'Call uptime' },
+        { name: 'PixelForge', role: 'Indie Game Studio', quote: 'One key to switch between Claude and GPT — pay-as-you-go lets a small team use frontier models without the overhead.', metric: '3.2x', metricLabel: 'Faster iteration' },
+        { name: 'DataMind', role: 'Data Analytics SaaS', quote: 'Usage details and quota controls are transparent. Team costs are finally predictable — no more billing surprises.', metric: '47%', metricLabel: 'Cost reduction' },
+        { name: 'CodePilot CN', role: 'Developer Tools', quote: 'Latency is noticeably lower than our home-brew proxy, and the routing is smart enough that failovers are invisible.', metric: '120ms', metricLabel: 'Avg latency' },
+        { name: 'WriteFlow', role: 'Content Platform', quote: 'Went from signup to production in half a day. Docs are clear and support is fast.', metric: '0.5d', metricLabel: 'Time to integrate' },
+        { name: 'GeniusEDU', role: 'EdTech Company', quote: 'Sticky sessions let us run long tasks reliably, and composing multiple models feels effortless.', metric: '10M+', metricLabel: 'Monthly calls' }
+      ]
+    },
     // CTA section
     cta: {
       title: 'Ready to Get Started?',
