@@ -1,0 +1,1101 @@
+<template>
+  <div v-if="homeContent" class="min-h-screen">
+    <iframe
+      v-if="isHomeContentUrl"
+      :src="homeContent.trim()"
+      class="h-screen w-full border-0"
+      allowfullscreen
+    ></iframe>
+    <div v-else v-html="homeContent"></div>
+  </div>
+
+  <div v-else ref="homeRoot" class="home-shell relative min-h-screen overflow-x-hidden">
+    <!-- 开屏动画 -->
+    <transition name="intro-fade">
+      <div v-if="introVisible" class="intro-overlay" :class="{ 'intro-done': introDone }">
+        <div class="intro-aurora" aria-hidden="true"></div>
+        <div class="intro-inner">
+          <div class="intro-mark" :class="{ 'pop': introMarkPop }">
+            <img v-if="siteLogo" :src="siteLogo" alt="" />
+            <span v-else class="intro-mark-fallback">{{ (siteName || 'S').charAt(0) }}</span>
+          </div>
+          <div class="intro-brand font-display">{{ siteName }}</div>
+          <div class="intro-tagline">The secure, stable AI gateway</div>
+          <div class="intro-lines">
+            <div v-for="(line, i) in introLines" :key="i" class="intro-line" :class="{ shown: introLineShown[i] }">
+              <span class="intro-dot"></span>
+              <span class="intro-text">{{ line }}</span>
+            </div>
+          </div>
+          <div class="intro-progress"><div class="intro-progress-bar" :style="{ width: introProgress + '%' }"></div></div>
+          <div class="intro-pct">{{ Math.round(introProgress) }}%</div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- 液态背景 -->
+    <div class="orb orb-1" aria-hidden="true"></div>
+    <div class="orb orb-2" aria-hidden="true"></div>
+    <!-- 电影颗粒噪点 -->
+    <div class="grain" aria-hidden="true"></div>
+
+    <!-- 导航 -->
+    <header class="nav-bar">
+      <router-link to="/home" class="brand" aria-label="Home">
+        <span class="brand-mark">
+          <img v-if="siteLogo" :src="siteLogo" alt="" />
+          <span v-else class="font-display">{{ (siteName || 'S').charAt(0) }}</span>
+        </span>
+        <span class="brand-name font-display">{{ siteName }}</span>
+      </router-link>
+      <div class="nav-right">
+        <a href="#story" class="nav-link hidden sm:inline-flex">Platform</a>
+        <a href="#models" class="nav-link hidden md:inline-flex">Models</a>
+        <a href="#faq" class="nav-link hidden lg:inline-flex">FAQ</a>
+        <button class="icon-action" :title="isDark ? 'Switch to Light' : 'Switch to Dark'" @click="toggleTheme">
+          <Icon :name="isDark ? 'sun' : 'moon'" size="sm" />
+        </button>
+        <router-link :to="isAuthenticated ? dashboardPath : '/login'" class="nav-cta">
+          <span>{{ isAuthenticated ? 'Dashboard' : 'Sign In' }}</span>
+          <Icon name="arrowRight" size="sm" />
+        </router-link>
+      </div>
+    </header>
+
+    <main class="relative z-10">
+      <!-- ============ Hero ============ -->
+      <section class="hero" @pointermove="onHeroMove" @pointerleave="resetHeroPointer">
+        <div class="hero-orb" aria-hidden="true"></div>
+        <div class="hero-light" aria-hidden="true"></div>
+        <div class="hero-copy">
+          <p class="hero-eyebrow reveal reveal-1"><span></span>{{ siteName }} Enterprise AI Infrastructure</p>
+          <h1 class="hero-title font-display reveal reveal-2">
+            One gateway.<br /><em>Every frontier model.</em>
+          </h1>
+          <p class="hero-sub reveal reveal-3">Route production AI traffic across Claude, GPT, Gemini and more through one secure, observable API.</p>
+          <div class="hero-actions reveal reveal-4">
+            <router-link :to="isAuthenticated ? dashboardPath : '/login'" class="primary-action">
+              {{ isAuthenticated ? 'Open Console' : 'Start Building' }}
+              <Icon name="arrowRight" size="sm" />
+            </router-link>
+            <a v-if="docUrl" :href="docUrl" target="_blank" rel="noopener noreferrer" class="text-action">
+              View Docs <span aria-hidden="true">↗</span>
+            </a>
+          </div>
+          <div class="hero-assurances reveal reveal-4" aria-label="Platform assurances">
+            <span><i></i>OpenAI-compatible</span>
+            <span><i></i>Usage-based billing</span>
+            <span><i></i>Automatic failover</span>
+          </div>
+        </div>
+
+        <div class="gateway-console reveal reveal-4" aria-label="AI gateway operations preview">
+          <div class="console-head">
+            <div class="console-title">
+              <span class="console-mark"><i></i><i></i><i></i></span>
+              <strong>Gateway Operations</strong>
+              <span class="console-env">Production</span>
+            </div>
+            <span class="console-health"><i></i>All systems operational</span>
+          </div>
+          <div class="console-metrics">
+            <div><span>Requests today</span><strong>{{ requestsToday.toLocaleString() }}</strong><small>+18.4%</small></div>
+            <div><span>Success rate</span><strong>99.98%</strong><small>Healthy</small></div>
+            <div><span>Median latency</span><strong>{{ latencyMs }} ms</strong><small>Global edge</small></div>
+            <div><span>Active routes</span><strong>12</strong><small>3 providers</small></div>
+          </div>
+          <div class="request-stream">
+            <div class="stream-head">
+              <div>
+                <strong>Request stream</strong>
+                <span>Live production traffic</span>
+              </div>
+              <span class="stream-live"><i></i>Live</span>
+            </div>
+            <div class="stream-table-wrap">
+              <table class="stream-table">
+                <thead><tr><th>Request</th><th>Model</th><th>Provider</th><th>Latency</th><th>Status</th></tr></thead>
+                <tbody>
+                  <tr v-for="(row, index) in gatewayRequests" :key="row.id">
+                    <td><span class="request-id">{{ row.id }}</span><small>{{ index === 0 ? 'just now' : index * 4 + 's ago' }}</small></td>
+                    <td>{{ index === 0 ? typedModel : row.model }}</td>
+                    <td><span class="provider-dot" :class="row.tone"></span>{{ row.provider }}</td>
+                    <td>{{ index === 0 ? latencyMs : row.latency }} ms</td>
+                    <td><span class="status-ok">200 OK</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="provider-rail" aria-label="Supported AI providers">
+        <span class="provider-rail-label">One integration for the models your team already uses</span>
+        <div>
+          <strong v-for="provider in providerList" :key="provider.code">{{ provider.name }}</strong>
+        </div>
+      </section>
+
+      <!-- ============ Manifesto ============ -->
+      <section id="story" class="manifesto">
+        <div class="waveform" aria-hidden="true">
+          <span v-for="(h, i) in barHeights" :key="i" class="wave-bar" :style="{ height: h + '%' }"></span>
+        </div>
+        <p class="manifesto-text font-display reveal-on-scroll">
+          No need to manage multiple subscriptions. Access Claude, GPT, Gemini and more with a single API key.
+        </p>
+        <div class="manifesto-stats reveal-on-scroll">
+          <div class="ms"><strong class="font-display">{{ animatedUptime }}%</strong><span>uptime</span></div>
+          <div class="ms"><strong class="font-display">{{ animatedModels }}+</strong><span>Supported Models</span></div>
+          <div class="ms"><strong class="font-display">{{ animatedLatency }}ms</strong><span>avg latency</span></div>
+        </div>
+      </section>
+
+      <!-- ============ 模型生态分隔条 ============ -->
+      <div class="breaker" aria-hidden="true">
+        <div class="breaker-track">
+          <span>OBSERVABLE</span><i>01</i><span>RESILIENT</span><i>02</i><span>MODEL-AGNOSTIC</span><i>03</i><span>SECURE BY DEFAULT</span><i>04</i>
+        </div>
+      </div>
+
+      <!-- ============ 痛点（编辑式编号列表，无边框） ============ -->
+      <section class="editorial">
+        <p class="section-kicker reveal-on-scroll">01</p>
+        <h2 class="section-title font-display reveal-on-scroll">Sound Familiar?</h2>
+        <div class="pain-list">
+          <div v-for="(item, idx) in painItems" :key="idx" class="pain-item reveal-on-scroll" :style="{ '--delay': idx * 70 + 'ms' }">
+            <span class="pain-num font-display">{{ String(idx + 1).padStart(2, '0') }}</span>
+            <div class="pain-body">
+              <h3 class="font-display">{{ item.title }}</h3>
+              <p>{{ item.desc }}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 解决方案（横向流，无边框） ============ -->
+      <section class="editorial">
+        <p class="section-kicker reveal-on-scroll">02</p>
+        <h2 class="section-title font-display reveal-on-scroll">We Solve These Problems</h2>
+        <p class="section-sub reveal-on-scroll">Three simple steps to stress-free AI access</p>
+        <div class="flow">
+          <div v-for="(f, i) in featureList" :key="f.key" class="flow-item reveal-on-scroll" :style="{ '--delay': i * 90 + 'ms' }">
+            <div class="flow-icon"><Icon :name="f.icon" size="lg" /></div>
+            <span class="flow-num font-display">{{ String(i + 1).padStart(2, '0') }}</span>
+            <h3 class="font-display">{{ f.title }}</h3>
+            <p>{{ f.desc }}</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 工作原理（ 분산，左侧文案右侧终端） ============ -->
+      <section class="editorial how-section">
+        <p class="section-kicker reveal-on-scroll">03</p>
+        <h2 class="section-title font-display reveal-on-scroll">How It Works</h2>
+        <p class="section-sub reveal-on-scroll">Three lines of code to every model</p>
+        <div class="how-grid">
+          <div class="how-steps reveal-on-scroll">
+            <div v-for="(s, i) in howSteps" :key="i" class="how-step" :style="{ '--delay': i * 80 + 'ms' }">
+              <span class="how-num font-display">{{ String(i + 1).padStart(2, '0') }}</span>
+              <div>
+                <h3 class="font-display">{{ s.title }}</h3>
+                <p>{{ s.desc }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="how-code reveal-on-scroll">
+            <div class="code-orb" aria-hidden="true"></div>
+            <pre class="code-snippet"><span class="c-key">import</span> openai <span class="c-key">from</span> <span class="c-str">"openai"</span>;
+
+<span class="c-key">const</span> client = <span class="c-key">new</span> openai({
+  apiKey: <span class="c-str">"sk-•••your-key"</span>,
+  baseURL: <span class="c-str">"{{ apiBaseUrl }}"</span>,
+});
+
+<span class="c-key">const</span> res = <span class="c-key">await</span> client.chat.completions.create({
+  model: <span class="c-str">"{{ typedModel }}"</span>,
+  stream: <span class="c-key">true</span>,
+});</pre>
+            <div class="code-foot"><span class="live-dot"></span> {{ latencyMs }}ms · 200 OK</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 平台能力（标尺横排，无边框） ============ -->
+      <section class="editorial">
+        <p class="section-kicker reveal-on-scroll">04</p>
+        <h2 class="section-title font-display reveal-on-scroll">Built for Production</h2>
+        <p class="section-sub reveal-on-scroll">Not just a proxy — a full observable, controllable, scalable gateway</p>
+        <div class="cap-rail">
+          <div v-for="(c, i) in capItems" :key="i" class="cap-item reveal-on-scroll" :style="{ '--delay': i * 80 + 'ms' }">
+            <div class="cap-icon"><Icon :name="capIcon(c.icon)" size="md" /></div>
+            <span class="cap-num font-display">{{ String(i + 1).padStart(2, '0') }}</span>
+            <h3 class="font-display">{{ c.title }}</h3>
+            <p>{{ c.desc }}</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 艺术分隔条 ============ -->
+      <div class="breaker breaker-alt" aria-hidden="true">
+        <div class="breaker-track">
+          <span>SMART ROUTING</span><i>01</i><span>REAL-TIME METERING</span><i>02</i><span>STICKY SESSIONS</span><i>03</i><span>AUDITABLE SECURITY</span><i>04</i>
+        </div>
+      </div>
+
+      <!-- ============ 对比（编辑式双栏散文，无边框） ============ -->
+      <section id="pricing" class="editorial">
+        <p class="section-kicker reveal-on-scroll">05</p>
+        <h2 class="section-title font-display reveal-on-scroll">Why Choose Us?</h2>
+        <div class="compare reveal-on-scroll">
+          <div class="compare-col compare-them">
+            <p class="compare-head">Official Subscriptions</p>
+            <p v-for="(row, key) in comparisonRows" :key="key" class="compare-line">{{ row.official }}</p>
+          </div>
+          <div class="compare-vs font-display"><em>vs</em></div>
+          <div class="compare-col compare-us">
+            <p class="compare-head">Our Platform</p>
+            <p v-for="(row, key) in comparisonRows" :key="key" class="compare-line">
+              <Icon name="checkCircle" size="sm" class="compare-check" />
+              {{ row.us }}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 模型（大字跑马灯 + chips） ============ -->
+      <section id="models" class="editorial">
+        <p class="section-kicker reveal-on-scroll">06</p>
+        <h2 class="section-title font-display reveal-on-scroll">One API, Multiple Choices</h2>
+        <div class="model-marquee reveal-on-scroll" aria-hidden="true">
+          <div class="marquee-track">
+            <span v-for="(p, i) in [...providerList, ...providerList]" :key="i" class="model-word font-display">{{ p.name }}</span>
+          </div>
+        </div>
+        <div class="model-chips reveal-on-scroll">
+          <span v-for="m in modelChips" :key="m.id" class="mchip" :class="[m.color, { active: typedModel === m.id }]">{{ m.name }}</span>
+        </div>
+      </section>
+
+      <!-- ============ 客户案例（单一特色引语 + 跑马灯） ============ -->
+      <section id="cases" class="editorial">
+        <p class="section-kicker reveal-on-scroll">07</p>
+        <h2 class="section-title font-display reveal-on-scroll">Customer Stories</h2>
+        <p class="section-sub reveal-on-scroll">See how teams ship faster with us</p>
+        <div class="trust-marquee reveal-on-scroll" aria-hidden="true">
+          <div class="marquee-track">
+            <span v-for="(c, i) in marqueeClients" :key="'a' + i" class="marquee-item font-display">{{ c }}</span>
+            <span v-for="(c, i) in marqueeClients" :key="'b' + i" class="marquee-item font-display">{{ c }}</span>
+          </div>
+        </div>
+        <div class="featured-quote reveal-on-scroll">
+          <p class="quote-mark font-display">“</p>
+          <p class="quote-text font-display" v-if="featuredCase">{{ featuredCase.quote }}</p>
+          <div class="quote-foot" v-if="featuredCase">
+            <span class="quote-name font-display">{{ featuredCase.name }}</span>
+            <span class="quote-role">{{ featuredCase.role }}</span>
+            <span class="quote-metric font-display">{{ featuredCase.metric }} · {{ featuredCase.metricLabel }}</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ FAQ（手风琴） ============ -->
+      <section id="faq" class="editorial">
+        <p class="section-kicker reveal-on-scroll">08</p>
+        <h2 class="section-title font-display reveal-on-scroll">Frequently Asked Questions</h2>
+        <div class="faq-list reveal-on-scroll">
+          <div v-for="(f, i) in faqItems" :key="i" class="faq-item" :class="{ open: faqOpen === i }">
+            <button class="faq-q" @click="toggleFaq(i)" :aria-expanded="faqOpen === i">
+              <span class="font-display">{{ f.q }}</span>
+              <span class="faq-icon" aria-hidden="true"></span>
+            </button>
+            <div class="faq-a">
+              <p>{{ f.a }}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ CTA ============ -->
+      <section class="cta-section">
+        <div class="cta-orb" aria-hidden="true"></div>
+        <h2 class="cta-title font-display reveal-on-scroll">Ready to Get Started?</h2>
+        <p class="cta-desc reveal-on-scroll">Sign up now and get free trial credits to experience seamless AI access</p>
+        <router-link :to="isAuthenticated ? dashboardPath : '/register'" class="cta-button reveal-on-scroll">
+          Sign Up Free
+          <Icon name="arrowRight" size="md" />
+        </router-link>
+      </section>
+    </main>
+
+    <footer class="home-footer">
+      <p>&copy; {{ currentYear }} {{ siteName }}. All rights reserved.</p>
+      <div>
+        <a v-if="docUrl" :href="docUrl" target="_blank" rel="noopener noreferrer">Docs</a>
+        <a :href="githubUrl" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </div>
+    </footer>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { gsap } from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { useAuthStore, useAppStore } from '@/stores'
+import Icon from '@/components/icons/Icon.vue'
+import { sanitizeUrl } from '@/utils/url'
+
+gsap.registerPlugin(ScrollTrigger)
+
+const authStore = useAuthStore()
+const appStore = useAppStore()
+const homeRoot = ref<HTMLElement | null>(null)
+let gsapContext: gsap.Context | null = null
+let animationMedia: gsap.MatchMedia | null = null
+let heroOrbX: ((value: number) => void) | null = null
+let heroOrbY: ((value: number) => void) | null = null
+
+const siteName = computed(() => appStore.cachedPublicSettings?.site_name || appStore.siteName || 'Sub2API')
+const siteLogo = computed(() => sanitizeUrl(appStore.cachedPublicSettings?.site_logo || appStore.siteLogo || '', { allowRelative: true, allowDataUrl: true }))
+const docUrl = computed(() => sanitizeUrl(appStore.cachedPublicSettings?.doc_url || appStore.docUrl || ''))
+const homeContent = computed(() => appStore.cachedPublicSettings?.home_content || '')
+const isHomeContentUrl = computed(() => {
+  const content = homeContent.value.trim()
+  return content.startsWith('http://') || content.startsWith('https://')
+})
+
+const isDark = ref(document.documentElement.classList.contains('dark'))
+const githubUrl = 'https://github.com/Wei-Shaw/sub2api'
+const isAuthenticated = computed(() => authStore.isAuthenticated)
+const isAdmin = computed(() => authStore.isAdmin)
+const dashboardPath = computed(() => isAdmin.value ? '/admin/dashboard' : '/dashboard')
+const currentYear = computed(() => new Date().getFullYear())
+
+function toggleTheme() {
+  isDark.value = !isDark.value
+  document.documentElement.classList.toggle('dark', isDark.value)
+  localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
+}
+
+function onHeroMove(e: PointerEvent): void {
+  const el = e.currentTarget as HTMLElement
+  const rect = el.getBoundingClientRect()
+  const xRatio = (e.clientX - rect.left) / rect.width
+  const yRatio = (e.clientY - rect.top) / rect.height
+  el.style.setProperty('--mx', xRatio * 100 + '%')
+  el.style.setProperty('--my', yRatio * 100 + '%')
+  heroOrbX?.((xRatio - 0.5) * 42)
+  heroOrbY?.((yRatio - 0.5) * 28)
+}
+
+function resetHeroPointer(): void {
+  heroOrbX?.(0)
+  heroOrbY?.(0)
+}
+
+// ===== Hardcoded English content (enterprise) =====
+const painItems = [
+  { title: 'Rising Subscription Costs', desc: 'Paying for multiple AI subscriptions that add up every month.' },
+  { title: 'Account Sprawl', desc: 'Managing scattered accounts and API keys across different platforms.' },
+  { title: 'Service Interruptions', desc: 'Single accounts hitting rate limits and disrupting your workflow.' },
+  { title: 'No Usage Visibility', desc: 'Cannot track where your money goes or limit team member usage.' }
+]
+const featureList = [
+  { key: 'unifiedGateway', icon: 'server' as const, title: 'One Unified Key', desc: 'Get a single API key to call all connected AI models. No separate applications needed.' },
+  { key: 'multiAccount', icon: 'swap' as const, title: 'Always Reliable', desc: 'Smart routing across multiple upstream accounts with automatic failover. Say goodbye to errors.' },
+  { key: 'balanceQuota', icon: 'chart' as const, title: 'Pay-as-You-Go', desc: 'Usage-based billing with quota limits. Full visibility into team consumption.' }
+]
+const comparisonRows = [
+  { official: 'Fixed monthly fee, pay even if unused', us: 'Pay only for what you use' },
+  { official: 'Single provider only', us: 'Switch between models freely' },
+  { official: 'Manage each service separately', us: 'Unified key, one dashboard' },
+  { official: 'Single account rate limits', us: 'Multi-account pool, auto-failover' },
+  { official: 'Not available', us: 'Quotas & detailed analytics' }
+]
+const providerList = [
+  { code: 'AN', name: 'Claude', tone: 'tone-orange' },
+  { code: 'OA', name: 'GPT / Codex', tone: 'tone-emerald' },
+  { code: 'GG', name: 'Gemini', tone: 'tone-blue' },
+  { code: 'AG', name: 'Antigravity', tone: 'tone-violet' }
+]
+const gatewayRequests = [
+  { id: 'req_9f3a1', model: 'claude-sonnet', provider: 'Anthropic', latency: 486, tone: 'tone-claude' },
+  { id: 'req_72cd8', model: 'gpt-4o', provider: 'OpenAI', latency: 521, tone: 'tone-openai' },
+  { id: 'req_41be6', model: 'gemini-1.5-pro', provider: 'Google', latency: 438, tone: 'tone-gemini' }
+]
+const howSteps = [
+  { title: 'Get Your Key', desc: 'Sign up and receive a single unified API key — no separate applications for each provider.' },
+  { title: 'Point Your Requests', desc: 'Direct your calls to our gateway. The rest of your code stays the same. OpenAI-compatible.' },
+  { title: 'Call Any Model', desc: 'One key switches freely between Claude, GPT and Gemini. Billed by token usage.' }
+]
+const capItems = [
+  { title: 'Smart Routing', desc: 'Multi-account pool with auto load-balancing and failover. Requests never drop.', icon: 'swap' },
+  { title: 'Real-time Metering', desc: 'Precise token-based billing. Balance, quotas and details at a glance.', icon: 'chart' },
+  { title: 'Sticky Sessions', desc: 'Long-running tasks stay coherent — context never gets split.', icon: 'sync' },
+  { title: 'Secure & Compliant', desc: 'TLS encryption, key isolation, auditable logs. Your data never leaks.', icon: 'lock' }
+]
+function capIcon(name: string): 'swap' | 'chart' | 'sync' | 'lock' {
+  return (['swap', 'chart', 'sync', 'lock'].includes(name) ? name : 'swap') as 'swap' | 'chart' | 'sync' | 'lock'
+}
+const faqItems = [
+  { q: 'Do I need to manage multiple subscriptions?', a: 'No. A single API key from our platform lets you call every connected model. Account pools, keys and load balancing are maintained by us.' },
+  { q: 'How does billing work?', a: 'Post-paid by actual token usage — no monthly fee, no minimum spend. Set low-balance alerts and resume instantly after top-up.' },
+  { q: 'Is it compatible with my existing code?', a: 'Fully OpenAI-compatible. Just swap the base URL and API key — no business code changes needed.' },
+  { q: 'How is stability guaranteed?', a: 'Auto-failover across a multi-account pool, targeting 99.9% uptime. Single-account rate limits never break your requests.' },
+  { q: 'Is my data stored?', a: 'Request/response bodies are not stored by default — only token counts and timestamps for billing. Adjust log retention anytime in privacy settings.' }
+]
+const faqOpen = ref<number | null>(0)
+function toggleFaq(i: number): void {
+  faqOpen.value = faqOpen.value === i ? -1 : i
+}
+const apiBaseUrl = computed(() => appStore.cachedPublicSettings?.api_base_url || 'https://api.example.com')
+
+const featuredCase = { name: 'Nova Labs', role: 'AI Startup', quote: 'Since integrating, our model calls never went down. Auto-failover across accounts kept our launch rock-solid.', metric: '99.98%', metricLabel: 'Call uptime' }
+const marqueeClients = ['Nova Labs', 'PixelForge', 'DataMind', 'CodePilot CN', 'WriteFlow', 'GeniusEDU', 'Aurora AI', 'ByteFlow', 'ThinkBase', 'PromptIQ']
+
+// ===== Intro animation =====
+const introVisible = ref(true)
+const introDone = ref(false)
+const introMarkPop = ref(false)
+const introProgress = ref(0)
+const introLineShown = ref<boolean[]>([false, false, false, false])
+const introLines = ['Initializing Gateway', 'Loading Model Network', 'Establishing Routing Nodes', 'System Ready']
+let introTimers: ReturnType<typeof setTimeout>[] = []
+
+function runIntro() {
+  introMarkPop.value = true
+  const lineDur = 420
+  introLines.forEach((_, i) => {
+    const tm1 = setTimeout(() => { introLineShown.value[i] = true }, 300 + i * lineDur)
+    introTimers.push(tm1)
+    const tm2 = setTimeout(() => {
+      const target = ((i + 1) / introLines.length) * 100
+      animateNumber(introProgress.value, target, 360, (v) => (introProgress.value = v))
+    }, 300 + i * lineDur)
+    introTimers.push(tm2)
+  })
+  const total = 300 + introLines.length * lineDur + 380
+  const tmEnd = setTimeout(() => {
+    introDone.value = true
+    const tmHide = setTimeout(() => { introVisible.value = false }, 700)
+    introTimers.push(tmHide)
+  }, total)
+  introTimers.push(tmEnd)
+}
+
+// ===== 动效：数字计数 =====
+const animatedUptime = ref(0)
+const animatedModels = ref(0)
+const animatedLatency = ref(0)
+const latencyMs = ref(642)
+
+function animateNumber(from: number, to: number, duration: number, onUpdate: (v: number) => void, decimals = 0) {
+  const state = { value: from }
+  return gsap.to(state, {
+    value: to,
+    duration: duration / 1000,
+    ease: 'power3.out',
+    onUpdate: () => {
+      onUpdate(decimals > 0 ? Number(state.value.toFixed(decimals)) : Math.round(state.value))
+    }
+  })
+}
+
+// ===== 动效：打字机模型名 =====
+const typedModel = ref('')
+const modelCycle = ['claude-sonnet', 'gpt-4o', 'gemini-1.5-pro', 'claude-opus', 'grok-2']
+let modelIdx = 0
+let typeTimer: ReturnType<typeof setTimeout> | null = null
+function typeNextModel() {
+  const target = modelCycle[modelIdx % modelCycle.length]
+  let i = 0
+  typedModel.value = ''
+  const tick = () => {
+    if (i <= target.length) {
+      typedModel.value = target.slice(0, i)
+      i++
+      typeTimer = setTimeout(tick, 65)
+    } else {
+      typeTimer = setTimeout(() => {
+        modelIdx++
+        typeNextModel()
+      }, 1800)
+    }
+  }
+  tick()
+}
+
+// ===== 动效：延迟波动 =====
+let latencyTimer: ReturnType<typeof setInterval> | null = null
+function startLatencyJitter() {
+  latencyTimer = setInterval(() => {
+    latencyMs.value = 380 + Math.floor(Math.random() * 420)
+  }, 1500)
+}
+
+// ===== 动效：波形 + 预览数据 =====
+const animatedBalance = ref(0)
+const requestsToday = ref(0)
+const barHeights = ref<number[]>(Array.from({ length: 28 }, () => 30 + Math.random() * 55))
+const modelChips = [
+  { id: 'claude-sonnet', name: 'Claude', color: 'chip-orange' },
+  { id: 'gpt-4o', name: 'GPT-4o', color: 'chip-emerald' },
+  { id: 'gemini-1.5-pro', name: 'Gemini', color: 'chip-blue' },
+  { id: 'grok-2', name: 'Grok', color: 'chip-zinc' },
+  { id: 'claude-opus', name: 'Opus', color: 'chip-violet' }
+]
+let barTimer: ReturnType<typeof setInterval> | null = null
+function startBars() {
+  barTimer = setInterval(() => {
+    barHeights.value = barHeights.value.map((h) => Math.max(15, Math.min(95, h + (Math.random() - 0.5) * 26)))
+  }, 900)
+}
+
+// ===== GSAP motion system =====
+function initGsapAnimations(reduceMotion: boolean) {
+  if (!homeRoot.value) return
+
+  if (reduceMotion) {
+    gsap.set(homeRoot.value.querySelectorAll('.reveal, .reveal-on-scroll'), { autoAlpha: 1, y: 0 })
+    return
+  }
+
+  gsapContext = gsap.context(() => {
+    const heroTimeline = gsap.timeline({
+      defaults: { ease: 'power3.out' },
+      delay: introVisible.value ? 2.15 : 0.05
+    })
+    heroTimeline
+      .from('.nav-bar', { autoAlpha: 0, y: -18, duration: 0.65 })
+      .from('.hero-eyebrow', { autoAlpha: 0, y: 20, duration: 0.55 }, '-=0.2')
+      .from('.hero-title', { autoAlpha: 0, y: 54, rotateX: -8, transformOrigin: '50% 100%', duration: 1.05 }, '-=0.3')
+      .from('.hero-sub', { autoAlpha: 0, y: 28, duration: 0.7 }, '-=0.55')
+      .from(['.hero-actions', '.hero-assurances'], { autoAlpha: 0, y: 20, duration: 0.6, stagger: 0.1 }, '-=0.38')
+      .from('.gateway-console', { autoAlpha: 0, y: 34, scale: 0.985, duration: 0.85 }, '-=0.3')
+
+    gsap.set('.reveal-on-scroll', { autoAlpha: 0, y: 34 })
+    ScrollTrigger.batch('.reveal-on-scroll', {
+      start: 'top 88%',
+      once: true,
+      onEnter: (elements) => {
+        gsap.to(elements, {
+          autoAlpha: 1,
+          y: 0,
+          duration: 0.82,
+          stagger: 0.08,
+          ease: 'power3.out',
+          overwrite: true
+        })
+      }
+    })
+
+    const stats = { uptime: 0, models: 0, latency: 0 }
+    gsap.to(stats, {
+      uptime: 99.9,
+      models: 20,
+      latency: 642,
+      duration: 1.5,
+      ease: 'power3.out',
+      scrollTrigger: { trigger: '.manifesto-stats', start: 'top 86%', once: true },
+      onUpdate: () => {
+        animatedUptime.value = Number(stats.uptime.toFixed(1))
+        animatedModels.value = Math.round(stats.models)
+        animatedLatency.value = Math.round(stats.latency)
+      }
+    })
+
+    heroOrbX = gsap.quickTo('.hero-orb', 'x', { duration: 1.1, ease: 'power3.out' })
+    heroOrbY = gsap.quickTo('.hero-orb', 'y', { duration: 1.1, ease: 'power3.out' })
+
+    animationMedia = gsap.matchMedia()
+    animationMedia.add('(min-width: 768px)', () => {
+      gsap.to('.hero-copy', {
+        yPercent: -9,
+        ease: 'none',
+        scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: 0.8 }
+      })
+      gsap.to('.orb-1', {
+        y: 150,
+        x: -40,
+        ease: 'none',
+        scrollTrigger: { trigger: '.home-shell', start: 'top top', end: 'bottom bottom', scrub: 1.2 }
+      })
+      gsap.to('.orb-2', {
+        y: -130,
+        x: 36,
+        ease: 'none',
+        scrollTrigger: { trigger: '.home-shell', start: 'top top', end: 'bottom bottom', scrub: 1.2 }
+      })
+    })
+  }, homeRoot.value)
+
+  requestAnimationFrame(() => ScrollTrigger.refresh())
+}
+
+function initTheme() {
+  const savedTheme = localStorage.getItem('theme')
+  if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    isDark.value = true
+    document.documentElement.classList.add('dark')
+  }
+}
+
+onMounted(() => {
+  initTheme()
+  authStore.checkAuth()
+  if (!appStore.publicSettingsLoaded) appStore.fetchPublicSettings()
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  if (reduceMotion) {
+    introVisible.value = false
+  } else {
+    runIntro()
+  }
+
+  animateNumber(0, 128.4, 1200, (v) => (animatedBalance.value = v), 2)
+  animateNumber(0, 1284, 1200, (v) => (requestsToday.value = v))
+  typeNextModel()
+  startLatencyJitter()
+  startBars()
+  initGsapAnimations(reduceMotion)
+})
+
+onUnmounted(() => {
+  if (typeTimer) clearTimeout(typeTimer)
+  if (latencyTimer) clearInterval(latencyTimer)
+  if (barTimer) clearInterval(barTimer)
+  animationMedia?.revert()
+  gsapContext?.revert()
+  heroOrbX = null
+  heroOrbY = null
+  introTimers.forEach((tm) => clearTimeout(tm))
+})
+</script>
+
+<style scoped>
+.home-shell { color: var(--ink); background: var(--surface-bg); }
+
+/* 电影颗粒噪点 */
+.grain { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: .04; mix-blend-mode: overlay; background-image: var(--noise); background-size: 180px 180px; }
+.dark .grain { opacity: .06; mix-blend-mode: soft-light; }
+
+/* 液态背景球 */
+.orb { position: fixed; border-radius: 50%; filter: blur(90px); pointer-events: none; z-index: 0; opacity: .55; }
+.orb-1 { width: 520px; height: 520px; top: -160px; right: -120px; background: radial-gradient(circle, rgba(14,165,233,.42), transparent 68%); animation: orb-drift 20s ease-in-out infinite; }
+.orb-2 { width: 460px; height: 460px; bottom: -120px; left: -140px; background: radial-gradient(circle, rgba(212,160,23,.34), transparent 68%); animation: orb-drift 26s ease-in-out infinite reverse; }
+@keyframes orb-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(40px, -30px) scale(1.12); }
+}
+
+/* 导航 */
+.nav-bar { position: relative; z-index: 20; display: flex; align-items: center; justify-content: space-between; max-width: 76rem; margin: 0 auto; padding: 28px 32px; }
+.brand { display: inline-flex; align-items: center; gap: 12px; }
+.brand-mark { width: 36px; height: 36px; border-radius: 12px; overflow: hidden; display: grid; place-items: center; background: var(--surface-1); border: 1px solid var(--line); box-shadow: var(--shadow-sm); }
+.brand-mark img { width: 100%; height: 100%; object-fit: contain; }
+.brand-mark .font-display { font-size: 18px; font-weight: 700; background-image: var(--gradient-primary); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.brand-name { font-size: 20px; font-weight: 700; letter-spacing: 0; color: var(--ink-strong); }
+.nav-right { display: flex; align-items: center; gap: 8px; }
+.nav-link { display: inline-flex; align-items: center; height: 36px; padding: 0 12px; font-size: 13px; font-weight: 500; color: var(--ink-muted); border-radius: 10px; transition: 180ms var(--ease-out); }
+.nav-link:hover { color: var(--ink); background: var(--surface-2); }
+.icon-action { display: inline-flex; width: 36px; height: 36px; align-items: center; justify-content: center; border-radius: 10px; color: var(--ink-muted); border: 1px solid transparent; transition: 180ms var(--ease-out); }
+.icon-action:hover { color: var(--ink); background: var(--surface-2); }
+.nav-cta { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 16px; border-radius: 10px; color: #fff; background-image: var(--gradient-primary); font-size: 13px; font-weight: 600; box-shadow: var(--shadow-glow); transition: 200ms var(--ease-out); }
+.nav-cta:hover { transform: translateY(-1px); box-shadow: var(--shadow-card-hover); }
+
+/* Hero */
+.hero { position: relative; max-width: 76rem; margin: 0 auto; padding: 88px 32px 56px; min-height: 760px; display: flex; flex-direction: column; justify-content: center; }
+.hero-orb { position: absolute; width: 620px; height: 620px; max-width: 90vw; right: -120px; top: 30%; border-radius: 50%; background-image: var(--gradient-brand); filter: blur(60px); opacity: .5; animation: orb-pulse 12s ease-in-out infinite; z-index: -1; }
+.hero-light { position: absolute; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 30%), color-mix(in srgb, var(--color-primary) 16%, transparent), transparent 60%); transition: background 200ms var(--ease-out); }
+@keyframes orb-pulse { 0%,100% { transform: scale(1) rotate(0deg); opacity: .45; } 50% { transform: scale(1.15) rotate(20deg); opacity: .6; } }
+.hero-copy { max-width: 940px; }
+.hero-eyebrow { display: inline-flex; align-items: center; gap: 9px; font-size: 12px; font-weight: 700; color: var(--color-primary-strong); letter-spacing: 0; margin-bottom: 28px; text-transform: uppercase; }
+.hero-eyebrow span { width: 7px; height: 7px; border-radius: 50%; background: var(--color-success); box-shadow: 0 0 0 4px var(--color-success-soft); }
+.dark .hero-eyebrow { color: var(--color-primary); }
+.hero-title { font-size: 84px; line-height: .98; font-weight: 800; letter-spacing: 0; color: var(--ink-strong); }
+.hero-title em { font-weight: 500; font-style: italic; background-image: var(--gradient-brand); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero-sub { margin-top: 28px; max-width: 720px; font-size: 19px; line-height: 1.65; font-weight: 400; color: var(--ink-muted); }
+.hero-actions { display: flex; align-items: center; gap: 22px; margin-top: 34px; flex-wrap: wrap; }
+.primary-action { display: inline-flex; align-items: center; gap: 10px; height: 52px; padding: 0 26px; border-radius: 14px; color: #fff; background-image: var(--gradient-primary); font-size: 15px; font-weight: 600; box-shadow: var(--shadow-glow); transition: 220ms var(--ease-out); }
+.primary-action:hover { transform: translateY(-2px) scale(1.02); box-shadow: var(--shadow-card-hover); }
+.text-action { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); font-size: 14px; font-weight: 600; border-bottom: 1.5px solid var(--color-primary); padding-bottom: 3px; transition: 180ms; }
+.text-action:hover { color: var(--color-primary); }
+.hero-assurances { display: flex; flex-wrap: wrap; gap: 12px 24px; margin-top: 26px; color: var(--ink-muted); font-size: 12px; }
+.hero-assurances span { display: inline-flex; align-items: center; gap: 8px; }
+.hero-assurances i { width: 4px; height: 4px; border-radius: 50%; background: var(--color-primary); }
+.live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--color-success); box-shadow: 0 0 0 4px var(--color-success-soft); animation: live-pulse 1.8s infinite; }
+@keyframes live-pulse { 50% { opacity: .5; } }
+.live-model { font-family: ui-monospace, monospace; font-size: 12px; color: var(--color-primary); padding: 4px 10px; border-radius: 999px; background: color-mix(in srgb, var(--color-primary) 10%, transparent); }
+
+.gateway-console { position: relative; margin-top: 64px; overflow: hidden; border: 1px solid #273142; border-radius: 6px; background: #0d1117; color: #e6edf3; box-shadow: 0 32px 90px -52px rgba(15, 23, 42, .9); }
+.console-head { display: flex; min-height: 50px; align-items: center; justify-content: space-between; gap: 20px; padding: 0 18px; border-bottom: 1px solid #222b38; background: #111720; color: #8491a3; font-size: 11px; }
+.console-title, .console-health { display: flex; align-items: center; gap: 10px; }
+.console-title strong { color: #f4f7fa; font-size: 12px; font-weight: 600; }
+.console-mark { display: flex; gap: 5px; }
+.console-mark i { width: 7px; height: 7px; border-radius: 50%; background: #3b4656; }
+.console-mark i:first-child { background: #38bdf8; }
+.console-env { padding: 3px 7px; border: 1px solid #344052; border-radius: 4px; color: #9ba8b8; font-family: ui-monospace, monospace; font-size: 9px; }
+.console-health i, .stream-live i { width: 6px; height: 6px; border-radius: 50%; background: #34d399; box-shadow: 0 0 0 3px rgba(52, 211, 153, .1); }
+.console-metrics { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid #222b38; }
+.console-metrics > div { min-width: 0; padding: 20px; border-right: 1px solid #222b38; }
+.console-metrics > div:last-child { border-right: 0; }
+.console-metrics span, .console-metrics small { display: block; color: #748196; font-size: 10px; }
+.console-metrics strong { display: block; margin: 8px 0 5px; color: #f4f7fa; font-size: 22px; font-weight: 600; letter-spacing: 0; }
+.console-metrics small { color: #66d9a5; }
+.request-stream { padding: 0 20px 18px; }
+.stream-head { display: flex; min-height: 58px; align-items: center; justify-content: space-between; }
+.stream-head > div { display: flex; align-items: baseline; gap: 10px; }
+.stream-head strong { font-size: 12px; font-weight: 600; }
+.stream-head span { color: #748196; font-size: 10px; }
+.stream-live { display: inline-flex; align-items: center; gap: 7px; }
+.stream-table-wrap { overflow-x: auto; border: 1px solid #222b38; border-radius: 4px; }
+.stream-table { width: 100%; min-width: 650px; border-collapse: collapse; text-align: left; font-size: 11px; }
+.stream-table th { height: 34px; padding: 0 14px; border-bottom: 1px solid #222b38; background: #111720; color: #68768a; font-size: 9px; font-weight: 500; text-transform: uppercase; }
+.stream-table td { height: 46px; padding: 0 14px; border-bottom: 1px solid #1b2430; color: #b8c2cf; }
+.stream-table tr:last-child td { border-bottom: 0; }
+.stream-table td:first-child { display: flex; align-items: center; gap: 9px; }
+.stream-table td small { color: #5f6d80; font-size: 9px; }
+.request-id { color: #dbe3ec; font-family: ui-monospace, monospace; }
+.provider-dot { display: inline-block; width: 7px; height: 7px; margin-right: 8px; border-radius: 2px; }
+.status-ok { display: inline-flex; align-items: center; padding: 3px 7px; border: 1px solid rgba(52, 211, 153, .2); border-radius: 4px; background: rgba(52, 211, 153, .07); color: #66d9a5; font-family: ui-monospace, monospace; font-size: 9px; }
+.tone-claude { background: #d97757; }
+.tone-openai { background: #10a37f; }
+.tone-gemini { background: #4285f4; }
+
+.provider-rail { max-width: 76rem; margin: 0 auto; padding: 34px 32px 42px; border-top: 1px solid var(--line); }
+.provider-rail-label { display: block; color: var(--ink-subtle); font-size: 11px; text-transform: uppercase; }
+.provider-rail div { display: flex; justify-content: space-between; gap: 28px; margin-top: 24px; overflow: hidden; }
+.provider-rail strong { color: var(--ink-muted); font-family: var(--font-display, serif); font-size: 20px; font-weight: 600; white-space: nowrap; }
+
+/* Manifesto */
+.manifesto { position: relative; max-width: 76rem; margin: 0 auto; padding: 96px 32px; }
+.waveform { display: flex; align-items: center; gap: 4px; height: 60px; margin-bottom: 56px; }
+.wave-bar { flex: 1; max-width: 6px; border-radius: 3px; background: linear-gradient(to top, var(--color-primary), var(--color-accent)); opacity: .5; transition: height 900ms var(--ease-out); min-height: 8px; }
+.manifesto-text { font-size: clamp(28px, 4.2vw, 56px); line-height: 1.25; font-weight: 400; letter-spacing: -0.02em; color: var(--ink-strong); max-width: 920px; }
+.manifesto-stats { display: flex; gap: 56px; margin-top: 56px; flex-wrap: wrap; }
+.ms { display: grid; }
+.ms strong { font-size: 44px; font-weight: 700; letter-spacing: -0.03em; color: var(--color-primary); }
+.ms span { margin-top: 6px; font-size: 13px; color: var(--ink-muted); }
+
+/* Enterprise capability rail */
+.breaker { overflow: hidden; padding: 18px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--surface-2) 56%, transparent); -webkit-mask-image: linear-gradient(90deg, transparent, black 5%, black 95%, transparent); mask-image: linear-gradient(90deg, transparent, black 5%, black 95%, transparent); }
+.breaker-track { display: flex; align-items: center; gap: 30px; width: max-content; white-space: nowrap; animation: marquee 44s linear infinite; }
+.breaker-track span { font-size: 12px; font-style: normal; font-weight: 700; letter-spacing: 0; color: var(--ink-muted); line-height: 1; }
+.breaker-track i { display: grid; width: 28px; height: 28px; place-items: center; border: 1px solid var(--line-strong); border-radius: 50%; color: var(--color-primary); font-family: ui-monospace, monospace; font-size: 9px; font-style: normal; opacity: .9; }
+.breaker-alt .breaker-track span { color: color-mix(in srgb, var(--color-primary) 60%, var(--ink-subtle)); }
+.breaker:hover .breaker-track { animation-play-state: paused; }
+
+/* Editorial 通用 */
+.editorial { max-width: 76rem; margin: 0 auto; padding: 80px 32px; }
+.section-kicker { display: inline-flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; color: var(--color-accent); letter-spacing: .04em; margin-bottom: 18px; }
+.section-kicker::before { content: '✦'; font-size: 12px; color: var(--color-primary); font-style: normal; }
+.section-title { font-size: clamp(36px, 5.5vw, 76px); line-height: 1; font-weight: 700; letter-spacing: -0.03em; color: var(--ink-strong); }
+.section-sub { margin-top: 18px; font-size: 16px; color: var(--ink-muted); max-width: 560px; }
+
+/* 痛点列表 */
+.pain-list { display: flex; flex-direction: column; margin-top: 56px; }
+.pain-item { display: grid; grid-template-columns: 88px 1fr; gap: 32px; padding: 32px 0; border-top: 1px solid var(--line); transition: 240ms var(--ease-out); align-items: start; }
+.pain-item:last-child { border-bottom: 1px solid var(--line); }
+.pain-item:hover { padding-left: 16px; }
+.pain-num { font-size: 28px; font-weight: 400; font-style: italic; color: var(--ink-subtle); transition: 240ms; }
+.pain-item:hover .pain-num { color: var(--color-primary); }
+.pain-body h3 { font-size: clamp(22px, 2.6vw, 30px); font-weight: 600; letter-spacing: -0.02em; color: var(--ink-strong); }
+.pain-body p { margin-top: 10px; font-size: 15px; line-height: 1.7; color: var(--ink-muted); max-width: 620px; }
+
+/* 解决方案流 */
+.flow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-top: 56px; border-top: 1px solid var(--line); }
+.flow-item { position: relative; padding: 40px 32px 40px 0; border-right: 1px solid var(--line); }
+.flow-item:last-child { border-right: 0; }
+.flow-icon { display: grid; width: 44px; height: 44px; place-items: center; border-radius: 12px; background: var(--surface-2); color: var(--color-primary); margin-bottom: 24px; transition: 220ms; }
+.flow-item:hover .flow-icon { background-image: var(--gradient-primary); color: #fff; }
+.flow-num { font-size: 13px; font-style: italic; color: var(--ink-subtle); margin-bottom: 14px; }
+.flow-item h3 { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; color: var(--ink-strong); }
+.flow-item p { margin-top: 12px; font-size: 14px; line-height: 1.7; color: var(--ink-muted); max-width: 340px; }
+
+/* 对比散文 */
+.compare { display: grid; grid-template-columns: 1fr auto 1fr; gap: 32px; margin-top: 56px; align-items: start; }
+.compare-col { display: flex; flex-direction: column; gap: 20px; }
+.compare-head { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; padding-bottom: 16px; border-bottom: 2px solid var(--line); }
+.compare-them .compare-head { color: var(--ink-subtle); }
+.compare-us .compare-head { color: var(--color-primary); border-color: var(--color-primary); }
+.compare-line { font-size: clamp(17px, 2vw, 22px); line-height: 1.5; color: var(--ink-muted); font-weight: 400; }
+.compare-us .compare-line { color: var(--ink-strong); font-weight: 500; display: flex; align-items: flex-start; gap: 10px; }
+.compare-check { color: var(--color-primary); margin-top: 4px; flex-shrink: 0; }
+.compare-vs { font-size: 40px; font-style: italic; font-weight: 400; color: var(--ink-subtle); align-self: center; padding: 0 8px; }
+
+/* 模型跑马灯 */
+.model-marquee { overflow: hidden; margin-top: 48px; -webkit-mask-image: linear-gradient(90deg, transparent, black 6%, black 94%, transparent); mask-image: linear-gradient(90deg, transparent, black 6%, black 94%, transparent); }
+.marquee-track { display: flex; gap: 48px; width: max-content; animation: marquee 30s linear infinite; }
+.model-word { font-size: clamp(40px, 6vw, 80px); font-weight: 700; letter-spacing: -0.03em; color: var(--ink-subtle); white-space: nowrap; line-height: 1.1; transition: color 200ms; }
+.model-word:hover { color: var(--color-primary); }
+.marquee-item { font-size: 22px; font-weight: 600; color: var(--ink-muted); white-space: nowrap; opacity: .6; }
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.model-chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 32px; }
+.mchip { padding: 8px 16px; border-radius: 999px; font-size: 13px; font-weight: 600; border: 1px solid var(--line); background: var(--surface-1); color: var(--ink-muted); transition: 240ms; }
+.mchip.active { color: #fff; border-color: transparent; box-shadow: var(--shadow-glow); transform: translateY(-2px); }
+.chip-orange.active { background: #f97316; } .chip-emerald.active { background: #10b981; } .chip-blue.active { background: #3b82f6; } .chip-zinc.active { background: #71717a; } .chip-violet.active { background: #8b5cf6; }
+
+/* 信任 marquee */
+.trust-marquee { overflow: hidden; margin-top: 40px; padding: 18px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); -webkit-mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent); mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent); }
+
+/* 工作原理 */
+.how-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; margin-top: 56px; align-items: start; }
+.how-steps { display: flex; flex-direction: column; gap: 8px; }
+.how-step { display: grid; grid-template-columns: 64px 1fr; gap: 22px; padding: 28px 0; border-top: 1px solid var(--line); transition: 240ms var(--ease-out); }
+.how-step:last-child { border-bottom: 1px solid var(--line); }
+.how-step:hover { padding-left: 12px; }
+.how-num { font-size: 26px; font-style: italic; font-weight: 400; color: var(--ink-subtle); transition: 240ms; }
+.how-step:hover .how-num { color: var(--color-primary); }
+.how-step h3 { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; color: var(--ink-strong); }
+.how-step p { margin-top: 10px; font-size: 14px; line-height: 1.7; color: var(--ink-muted); }
+.how-code { position: relative; border-radius: 18px; background: var(--surface-1); border: 1px solid var(--line); overflow: hidden; box-shadow: var(--shadow-card); }
+.code-orb { position: absolute; width: 280px; height: 280px; right: -80px; top: -80px; border-radius: 50%; background-image: var(--gradient-brand); filter: blur(40px); opacity: .35; pointer-events: none; animation: orb-pulse 12s ease-in-out infinite; }
+.code-snippet { position: relative; margin: 0; padding: 28px; font-family: ui-monospace, "SFMono-Regular", monospace; font-size: 13px; line-height: 1.85; color: var(--ink); overflow-x: auto; white-space: pre; }
+.code-snippet .c-key { color: var(--color-primary); font-weight: 600; }
+.code-snippet .c-str { color: var(--color-accent); }
+.code-foot { display: flex; align-items: center; gap: 8px; padding: 14px 24px; border-top: 1px solid var(--line); font-family: ui-monospace, monospace; font-size: 12px; color: var(--ink-muted); }
+.code-foot strong { color: var(--color-success); font-weight: 600; }
+
+/* 平台能力 */
+.cap-rail { display: grid; grid-template-columns: repeat(4, 1fr); margin-top: 56px; border-top: 1px solid var(--line); }
+.cap-item { position: relative; padding: 36px 28px 36px 0; border-right: 1px solid var(--line); transition: 240ms var(--ease-out); }
+.cap-item:last-child { border-right: 0; }
+.cap-item:hover { background: color-mix(in srgb, var(--color-primary) 4%, transparent); }
+.cap-icon { display: grid; width: 44px; height: 44px; place-items: center; border-radius: 12px; background: color-mix(in srgb, var(--color-primary) 12%, transparent); color: var(--color-primary); margin-bottom: 20px; transition: 240ms; }
+.cap-item:hover .cap-icon { background-image: var(--gradient-primary); color: #fff; }
+.cap-num { font-size: 13px; font-style: italic; color: var(--ink-subtle); display: block; margin-bottom: 12px; }
+.cap-item h3 { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; color: var(--ink-strong); }
+.cap-item p { margin-top: 10px; font-size: 13px; line-height: 1.7; color: var(--ink-muted); }
+
+/* FAQ */
+.faq-list { margin-top: 48px; max-width: 840px; }
+.faq-item { border-top: 1px solid var(--line); }
+.faq-item:last-child { border-bottom: 1px solid var(--line); }
+.faq-q { display: flex; align-items: center; justify-content: space-between; gap: 20px; width: 100%; padding: 26px 4px; text-align: left; background: none; border: 0; cursor: pointer; transition: 200ms; }
+.faq-q span.font-display { font-size: clamp(18px, 2.2vw, 24px); font-weight: 500; letter-spacing: -0.01em; color: var(--ink-strong); transition: color 200ms; }
+.faq-q:hover span.font-display { color: var(--color-primary); }
+.faq-icon { position: relative; width: 18px; height: 18px; flex-shrink: 0; transition: transform 300ms var(--ease-out); }
+.faq-icon::before, .faq-icon::after { content: ''; position: absolute; left: 50%; top: 50%; background: var(--color-primary); border-radius: 2px; transform: translate(-50%, -50%); }
+.faq-icon::before { width: 14px; height: 2px; }
+.faq-icon::after { width: 2px; height: 14px; transition: transform 300ms var(--ease-out); }
+.faq-item.open .faq-icon::after { transform: translate(-50%, -50%) scaleY(0); }
+.faq-a { max-height: 0; overflow: hidden; transition: max-height 360ms var(--ease-out); }
+.faq-item.open .faq-a { max-height: 280px; }
+.faq-a p { padding: 0 4px 28px; font-size: 15px; line-height: 1.75; color: var(--ink-muted); max-width: 700px; }
+
+/* 特色引语 */
+.featured-quote { position: relative; margin-top: 56px; max-width: 920px; }
+.quote-mark { font-size: 120px; line-height: .5; color: var(--color-primary); opacity: .25; font-style: italic; }
+.quote-text { font-size: clamp(24px, 3vw, 40px); line-height: 1.35; font-weight: 400; font-style: italic; letter-spacing: -0.01em; color: var(--ink-strong); margin-top: 8px; }
+.quote-foot { display: flex; align-items: baseline; gap: 14px; margin-top: 32px; flex-wrap: wrap; }
+.quote-name { font-size: 18px; font-weight: 600; color: var(--ink-strong); }
+.quote-role { font-size: 14px; color: var(--ink-muted); }
+.quote-metric { font-size: 15px; font-weight: 600; color: var(--color-accent); margin-left: auto; }
+
+/* CTA */
+.cta-section { position: relative; max-width: 76rem; margin: 0 auto; padding: 120px 32px; text-align: center; overflow: hidden; }
+.cta-orb { position: absolute; width: 560px; height: 560px; max-width: 95vw; left: 50%; top: 50%; transform: translate(-50%, -50%); border-radius: 50%; background-image: var(--gradient-aurora); filter: blur(50px); opacity: .8; z-index: -1; animation: orb-pulse 14s ease-in-out infinite; }
+.cta-title { font-size: clamp(40px, 6vw, 88px); line-height: 1; font-weight: 700; letter-spacing: -0.03em; color: var(--ink-strong); }
+.cta-desc { margin: 24px auto 0; max-width: 540px; font-size: 16px; color: var(--ink-muted); }
+.cta-button { display: inline-flex; align-items: center; gap: 10px; margin-top: 40px; height: 56px; padding: 0 32px; border-radius: 16px; color: #fff; background-image: var(--gradient-primary); font-size: 16px; font-weight: 600; box-shadow: var(--shadow-glow); transition: 240ms var(--ease-spring); }
+.cta-button:hover { transform: translateY(-3px) scale(1.03); box-shadow: var(--shadow-card-hover); }
+
+/* Footer */
+.home-footer { display: flex; max-width: 76rem; margin: 0 auto; padding: 40px 32px; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); color: var(--ink-muted); font-size: 12px; }
+.home-footer div { display: flex; gap: 22px; }
+.home-footer a:hover { color: var(--color-primary); }
+
+/* 开屏 */
+.intro-overlay { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: var(--surface-bg); transition: opacity 600ms var(--ease-out), visibility 600ms; }
+.intro-overlay.intro-done { opacity: 0; visibility: hidden; pointer-events: none; }
+.intro-aurora { position: absolute; inset: -20%; background-image: var(--gradient-aurora); filter: blur(24px); animation: intro-aurora 8s ease-in-out infinite alternate; }
+@keyframes intro-aurora { 0% { transform: scale(1); } 100% { transform: scale(1.18) rotate(4deg); } }
+.intro-inner { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 24px; }
+.intro-mark { width: 76px; height: 76px; border-radius: 20px; display: grid; place-items: center; overflow: hidden; border: 1px solid var(--line-strong); background: var(--surface-1); box-shadow: var(--shadow-card), 0 0 48px -8px rgba(14,165,233,.5); transform: scale(.6); opacity: 0; transition: 420ms var(--ease-spring); }
+.intro-mark.pop { transform: scale(1); opacity: 1; }
+.intro-mark img { width: 100%; height: 100%; object-fit: contain; }
+.intro-mark-fallback { font-size: 32px; font-weight: 700; background-image: var(--gradient-primary); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.intro-brand { margin-top: 24px; font-size: 28px; font-weight: 700; letter-spacing: -0.02em; color: var(--ink-strong); }
+.intro-tagline { margin-top: 8px; font-size: 12px; color: var(--ink-muted); }
+.intro-lines { margin-top: 30px; display: flex; flex-direction: column; gap: 9px; font-size: 12px; }
+.intro-line { display: flex; align-items: center; gap: 10px; color: var(--ink-subtle); opacity: 0; transform: translateX(-8px); transition: 260ms var(--ease-out); }
+.intro-line.shown { opacity: 1; transform: translateX(0); color: var(--ink); }
+.intro-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--color-primary); box-shadow: 0 0 8px var(--color-primary); opacity: 0; transition: opacity 200ms 60ms; }
+.intro-line.shown .intro-dot { opacity: 1; }
+.intro-text { min-width: 160px; text-align: left; }
+.intro-progress { margin-top: 28px; width: 280px; max-width: 70vw; height: 3px; border-radius: 99px; background: var(--surface-3); overflow: hidden; }
+.intro-progress-bar { height: 100%; background-image: var(--gradient-primary); border-radius: 99px; transition: width 360ms var(--ease-out); box-shadow: 0 0 12px rgba(14,165,233,.6); }
+.intro-pct { margin-top: 10px; font-size: 11px; color: var(--ink-subtle); font-family: ui-monospace, monospace; }
+.intro-fade-leave-active { transition: opacity 600ms var(--ease-out); }
+.intro-fade-leave-to { opacity: 0; }
+
+@media (max-width: 1024px) {
+  .hero-title { font-size: 68px; }
+  .flow { grid-template-columns: 1fr; }
+  .flow-item { border-right: 0; border-bottom: 1px solid var(--line); padding: 32px 0; }
+  .flow-item:last-child { border-bottom: 0; }
+  .compare { grid-template-columns: 1fr; gap: 16px; }
+  .compare-vs { justify-self: start; padding: 0; }
+  .how-grid { grid-template-columns: 1fr; gap: 32px; }
+  .cap-rail { grid-template-columns: repeat(2, 1fr); }
+  .cap-item:nth-child(2) { border-right: 0; }
+  .cap-item:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+}
+@media (max-width: 840px) {
+  .console-metrics { grid-template-columns: repeat(2, 1fr); }
+  .console-metrics > div:nth-child(2) { border-right: 0; }
+  .console-metrics > div:nth-child(-n+2) { border-bottom: 1px solid #222b38; }
+}
+@media (max-width: 640px) {
+  /* 导航：极简紧凑 */
+  .nav-bar { padding: 14px 16px; gap: 8px; }
+  .brand { gap: 10px; }
+  .brand-mark { width: 32px; height: 32px; border-radius: 10px; }
+  .brand-name { display: none; }
+  .nav-link { display: none; }
+  .nav-right { gap: 6px; }
+  .icon-action { width: 34px; height: 34px; }
+  .nav-cta { height: 34px; padding: 0 14px; font-size: 12px; gap: 6px; }
+  .nav-cta :deep(svg) { display: none; }
+
+  /* 固定光斑：缩小降透明，避免 muddy */
+  .orb { opacity: .28; filter: blur(70px); }
+  .orb-1 { width: 320px; height: 320px; top: -100px; right: -80px; }
+  .orb-2 { width: 280px; height: 280px; bottom: -80px; left: -90px; }
+
+  /* Hero：干净无 muddy 光球，文字优先 */
+  .hero { padding: 54px 18px 28px; min-height: auto; }
+  .hero-orb { display: none; }
+  .hero-copy { max-width: 100%; }
+  .hero-eyebrow { font-size: 10px; margin-bottom: 20px; }
+  .hero-title { font-size: 46px; line-height: 1.02; }
+  .hero-sub { font-size: 16px; margin-top: 20px; line-height: 1.65; }
+  .hero-actions { gap: 12px; margin-top: 26px; flex-direction: column; align-items: stretch; }
+  .primary-action { width: 100%; height: 50px; border-radius: 12px; justify-content: center; }
+  .text-action { align-self: center; font-size: 13px; }
+
+  .hero-assurances { gap: 9px 16px; margin-top: 22px; font-size: 10px; }
+  .gateway-console { margin-top: 38px; }
+  .console-head { padding: 0 12px; }
+  .console-health { display: none; }
+  .console-metrics > div { padding: 15px 12px; }
+  .console-metrics strong { font-size: 18px; }
+  .request-stream { padding: 0 12px 12px; }
+  .stream-head > div span { display: none; }
+  .provider-rail { padding: 28px 18px 34px; }
+  .provider-rail div { justify-content: flex-start; gap: 26px; overflow-x: auto; scrollbar-width: none; }
+  .provider-rail strong { font-size: 17px; }
+
+  /* Manifesto */
+  .manifesto, .editorial { padding: 56px 18px; }
+  .breaker { padding: 14px 0; }
+  .breaker-track { gap: 24px; animation-duration: 30s; }
+  .breaker-track span { font-size: 10px; }
+  .breaker-track i { width: 24px; height: 24px; font-size: 8px; }
+  .waveform { height: 38px; margin-bottom: 36px; gap: 3px; }
+  .wave-bar:nth-child(even) { display: none; }
+  .manifesto-text { font-size: clamp(22px, 6.2vw, 30px); line-height: 1.3; }
+  .manifesto-stats { gap: 24px; margin-top: 40px; }
+  .ms strong { font-size: 28px; }
+  .ms span { font-size: 11px; }
+
+  .section-title { font-size: clamp(28px, 8.5vw, 40px); }
+  .section-sub { font-size: 14px; margin-top: 14px; }
+  .section-kicker { font-size: 12px; margin-bottom: 14px; }
+
+  /* 痛点 */
+  .pain-list { margin-top: 36px; }
+  .pain-item { grid-template-columns: 44px 1fr; gap: 14px; padding: 22px 0; }
+  .pain-num { font-size: 20px; }
+  .pain-body h3 { font-size: 18px; }
+  .pain-body p { font-size: 13.5px; line-height: 1.65; }
+
+  /* 解决方案 */
+  .flow { margin-top: 36px; }
+  .flow-item { padding: 28px 0; }
+  .flow-item h3 { font-size: 20px; }
+  .flow-item p { font-size: 13.5px; }
+  .flow-icon { width: 40px; height: 40px; margin-bottom: 18px; }
+
+  /* 工作原理 */
+  .how-grid { margin-top: 36px; gap: 28px; }
+  .how-step { grid-template-columns: 44px 1fr; gap: 14px; padding: 20px 0; }
+  .how-num { font-size: 20px; }
+  .how-step h3 { font-size: 18px; }
+  .how-step p { font-size: 13.5px; line-height: 1.65; }
+  .how-code { border-radius: 16px; }
+  .code-snippet { font-size: 11px; padding: 16px; line-height: 1.7; }
+  .code-foot { padding: 12px 16px; font-size: 11px; }
+
+  /* 平台能力 */
+  .cap-rail { margin-top: 36px; }
+  .cap-item { padding: 26px 0; }
+  .cap-item h3 { font-size: 18px; }
+  .cap-item p { font-size: 13.5px; }
+  .cap-icon { width: 40px; height: 40px; margin-bottom: 16px; }
+
+  /* 对比 */
+  .compare { margin-top: 36px; gap: 20px; }
+  .compare-head { font-size: 12px; padding-bottom: 12px; }
+  .compare-line { font-size: 15.5px; line-height: 1.45; }
+  .compare-vs { font-size: 28px; align-self: flex-start; }
+
+  /* 模型跑马灯 */
+  .model-marquee { margin-top: 36px; }
+  .model-word { font-size: clamp(34px, 10vw, 56px); }
+  .model-chips { gap: 8px; margin-top: 24px; }
+  .mchip { padding: 7px 14px; font-size: 12px; }
+
+  /* 客户案例 */
+  .trust-marquee { margin-top: 32px; padding: 14px 0; }
+  .marquee-item { font-size: 18px; }
+  .featured-quote { margin-top: 40px; }
+  .quote-mark { font-size: 80px; }
+  .quote-text { font-size: clamp(19px, 5.5vw, 24px); line-height: 1.4; }
+  .quote-foot { gap: 10px; margin-top: 24px; }
+  .quote-name { font-size: 16px; }
+  .quote-role { font-size: 13px; }
+  .quote-metric { font-size: 13px; margin-left: 0; }
+
+  /* FAQ */
+  .faq-list { margin-top: 32px; }
+  .faq-q { padding: 20px 2px; }
+  .faq-q span.font-display { font-size: 16px; }
+  .faq-a p { font-size: 14px; line-height: 1.7; padding-bottom: 22px; }
+
+  /* CTA */
+  .cta-section { padding: 72px 18px; }
+  .cta-title { font-size: clamp(32px, 10vw, 48px); }
+  .cta-desc { font-size: 14px; margin-top: 18px; }
+  .cta-button { height: 50px; padding: 0 26px; font-size: 15px; margin-top: 30px; width: 100%; max-width: 320px; }
+  .cta-orb { width: 380px; height: 380px; opacity: .6; }
+
+  /* Footer */
+  .home-footer { flex-direction: column; gap: 12px; text-align: center; padding: 28px 18px; font-size: 11px; }
+  .home-footer div { gap: 18px; }
+
+  /* 开屏 */
+  .intro-text { min-width: 120px; }
+  .intro-mark { width: 60px; height: 60px; border-radius: 16px; }
+  .intro-brand { font-size: 22px; }
+  .intro-tagline { font-size: 11px; }
+  .intro-lines { font-size: 11px; gap: 8px; }
+  .intro-text { min-width: 130px; }
+  .intro-progress { width: 230px; margin-top: 22px; }
+  .intro-pct { font-size: 10px; }
+}
+@media (max-width: 380px) {
+  .hero-title { font-size: 40px; }
+  .hero-eyebrow { font-size: 11px; }
+  .nav-cta { padding: 0 11px; font-size: 11px; }
+  .brand-mark { width: 30px; height: 30px; }
+  .icon-action { width: 32px; height: 32px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal, .orb, .hero-orb, .cta-orb, .intro-aurora, .marquee-track, .live-dot, .wave-bar { animation: none !important; }
+  .reveal, .reveal-on-scroll { opacity: 1; transform: none; }
+  .intro-overlay { display: none; }
+}
+</style>
